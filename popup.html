@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      --bg: #121212;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --accent: #e67e22;
+      --text: #ffffff;
+      --text-dim: #a0a0a0;
+    }
+    body {
+      width: 250px;
+      padding: 16px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+    .potato-icon {
+      font-size: 24px;
+    }
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .control-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 10px 12px;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .control-item:hover {
+      transform: scale(1.02);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .control-item.master {
+      background: rgba(230, 126, 34, 0.1);
+      border-color: rgba(230, 126, 34, 0.3);
+    }
+    .control-item.master span {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .control-item.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(1);
+    }
+    .control-item span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #333;
+      transition: .4s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 10px;
+      color: var(--text-dim);
+      text-align: center;
+      opacity: 0.7;
+    }
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="potato-icon">🥔</span>
+    <h1>Potato Mode</h1>
+  </div>
+
+  <div class="controls">
+    <div class="control-item master">
+      <span>Activer Potato Mode</span>
+      <label class="switch">
+        <input type="checkbox" id="enabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div style="margin-top: 8px; margin-bottom: 4px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Paramètres</div>
+
+    <div class="control-item">
+      <span>Désactiver Animations</span>
+      <label class="switch">
+        <input type="checkbox" id="disableAnimations">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Noir & Blanc (Médias)</span>
+      <label class="switch">
+        <input type="checkbox" id="grayscaleMedia">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Bloquer les GIFs</span>
+      <label class="switch">
+        <input type="checkbox" id="blockGifs">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Mise en pause des vidéos</span>
+      <label class="switch">
+        <input type="checkbox" id="pauseVideos">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Design Plat (Pas d'ombres)</span>
+      <label class="switch">
+        <input type="checkbox" id="removeUIEffects">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Bloquer toutes les images</span>
+      <label class="switch">
+        <input type="checkbox" id="blockImages">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Dark Mode Forcé</span>
+      <label class="switch">
+        <input type="checkbox" id="darkMode">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="control-item">
+      <span>Polices Systèmes</span>
+      <label class="switch">
+        <input type="checkbox" id="systemFonts">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="footer">
+    Fait par <a href="https://github.com/djael-ml" target="_blank">djael-ml</a>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
