@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #161616;
+      --border: #1f1f1f;
+      --border-hover: #2d2d2d;
+      --accent: #e67e22;
+      --accent-dim: rgba(230, 126, 34, 0.12);
+      --accent-glow: rgba(230, 126, 34, 0.25);
+      --text: #e8e8e8;
+      --text-dim: #555;
+      --text-mid: #888;
+      --green: #4caf7d;
+      --red: #e05555;
+      --blue: #5dade2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      min-height: 100px;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* ====== HEADER ====== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .potato-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .brand-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-version {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+    .master-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .master-label {
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--text-mid);
+    }
+
+    /* ====== PERFORMANCE METER ====== */
+    .perf-bar-wrapper {
+      padding: 10px 16px 0;
+    }
+
+    .perf-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .perf-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .perf-value {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      transition: color 0.3s;
+    }
+
+    .perf-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .perf-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #f39c12);
+      border-radius: 2px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 0%;
+    }
+
+    /* ====== SCROLL AREA ====== */
+    .scroll-area {
+      max-height: 440px;
+      overflow-y: auto;
+      padding: 10px 12px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .scroll-area::-webkit-scrollbar { width: 3px; }
+    .scroll-area::-webkit-scrollbar-track { background: transparent; }
+    .scroll-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ====== SECTION ====== */
+    .section {
+      margin-bottom: 6px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 4px 4px;
+      cursor: pointer;
+    }
+
+    .section-icon {
+      font-size: 11px;
+      width: 16px;
+      text-align: center;
+    }
+
+    .section-title {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      flex: 1;
+    }
+
+    .section-chevron {
+      font-size: 8px;
+      color: var(--text-dim);
+      transition: transform 0.2s;
+    }
+
+    .section-header:hover .section-title,
+    .section-header:hover .section-chevron {
+      color: var(--text-mid);
+    }
+
+    .section.collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      overflow: hidden;
+      transition: max-height 0.25s ease, opacity 0.2s;
+      max-height: 500px;
+      opacity: 1;
+    }
+
+    .section.collapsed .section-body {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    /* ====== CONTROL ITEM ====== */
+    .control-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      margin-bottom: 3px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      transition: border-color 0.15s, background 0.15s;
+      cursor: default;
+    }
+
+    .control-item:hover {
+      border-color: var(--border-hover);
+      background: var(--surface2);
+    }
+
+    .control-item.active {
+      border-color: rgba(230, 126, 34, 0.3);
+      background: var(--accent-dim);
+    }
+
+    .control-item.disabled-item {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .control-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .control-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .control-desc {
+      font-size: 9px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ====== TOGGLE SWITCH ====== */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 18px;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: #222;
+      border: 1px solid #2a2a2a;
+      border-radius: 18px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .slider::before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 2px;
+      top: 2px;
+      background: #444;
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    input:checked + .slider {
+      background: rgba(230, 126, 34, 0.2);
+      border-color: var(--accent);
+    }
+
+    input:checked + .slider::before {
+      transform: translateX(18px);
+      background: var(--accent);
+    }
+
+    /* Master switch is bigger */
+    .switch.master {
+      width: 42px;
+      height: 22px;
+    }
+    .switch.master .slider::before {
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      top: 3px;
+    }
+    .switch.master input:checked + .slider::before {
+      transform: translateX(20px);
+    }
+    .switch.master input:checked + .slider {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .switch.master input:checked + .slider::before {
+      background: #fff;
+    }
+
+    /* ====== TEXTAREA ====== */
+    .textarea-wrap {
+      padding: 4px 0 2px;
+    }
+
+    textarea.pm-textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 8px 10px;
+      resize: vertical;
+      min-height: 70px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    textarea.pm-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea.pm-textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    .textarea-label {
+      font-size: 9px;
+      color: var(--text-dim);
+      margin-bottom: 5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: block;
+    }
+
+    /* ====== DIVIDER ====== */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 6px 0;
+    }
+
+    /* ====== STATUS BAR ====== */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .status-dot.off {
+      background: #333;
+      box-shadow: none;
+    }
+
+    .status-dot.whitelisted {
+      background: var(--blue);
+      box-shadow: 0 0 6px var(--blue);
+    }
+
+    .status-text {
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+
+    .footer-link {
+      font-size: 9px;
+      color: var(--text-dim);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .footer-link:hover { color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <span class="potato-icon">🥔</span>
+      <div class="brand">
+        <span class="brand-name">Potato Mode</span>
+        <span class="brand-version">v2.0 — Chrome/Brave</span>
+      </div>
+    </div>
+    <div class="master-toggle">
+      <span class="master-label" id="masterLabel">ON</span>
+      <label class="switch master">
+        <input type="checkbox" id="enabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE METER -->
+  <div class="perf-bar-wrapper">
+    <div class="perf-header">
+      <span class="perf-label">⚡ Potato Power</span>
+      <span class="perf-value" id="perfValue">0%</span>
+    </div>
+    <div class="perf-bar">
+      <div class="perf-fill" id="perfFill"></div>
+    </div>
+  </div>
+
+  <!-- MAIN SCROLL AREA -->
+  <div class="scroll-area" id="mainControls">
+
+    <!-- SECTION: PERFORMANCE -->
+    <div class="section" data-section="perf">
+      <div class="section-header" onclick="toggleSection('perf')">
+        <span class="section-icon">⚙️</span>
+        <span class="section-title">Performance</span>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+
+        <div class="control-item" id="item-disableAnimations">
+          <div class="control-info">
+            <span class="control-name">Désactiver Animations</span>
+            <span class="control-desc">CSS transitions, keyframes, scroll-behavior</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="disableAnimations"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-removeUIEffects">
+          <div class="control-info">
+            <span class="control-name">Design Plat</span>
+            <span class="control-desc">Supprime ombres, border-radius</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="removeUIEffects"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-noWillChange">
+          <div class="control-info">
+            <span class="control-name">Nettoyer will-change</span>
+            <span class="control-desc">Libère GPU des couches composites inutiles</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="noWillChange"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-contentVisibility">
+          <div class="control-info">
+            <span class="control-name">content-visibility: auto</span>
+            <span class="control-desc">Skip rendering hors écran (expérimental)</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="contentVisibility"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-lazyLoadAll">
+          <div class="control-info">
+            <span class="control-name">Lazy Load Forcé</span>
+            <span class="control-desc">Images & iframes chargées à la demande</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="lazyLoadAll"><span class="slider"></span></label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: MEDIA -->
+    <div class="section" data-section="media">
+      <div class="section-header" onclick="toggleSection('media')">
+        <span class="section-icon">🎞️</span>
+        <span class="section-title">Médias</span>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+
+        <div class="control-item" id="item-pauseVideos">
+          <div class="control-info">
+            <span class="control-name">Pause Vidéos</span>
+            <span class="control-desc">Bloque autoplay, force preload=none</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="pauseVideos"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-blockGifs">
+          <div class="control-info">
+            <span class="control-name">Bloquer les GIFs</span>
+            <span class="control-desc">Cache les .gif animés</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="blockGifs"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-grayscaleMedia">
+          <div class="control-info">
+            <span class="control-name">Noir & Blanc</span>
+            <span class="control-desc">Grayscale sur images/vidéos/canvas</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="grayscaleMedia"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-blockImages">
+          <div class="control-info">
+            <span class="control-name">Bloquer toutes les images</span>
+            <span class="control-desc">Masque img, svg, background-image</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="blockImages"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-blockIframes">
+          <div class="control-info">
+            <span class="control-name">Bloquer les Iframes</span>
+            <span class="control-desc">Masque embed, object, iframe</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="blockIframes"><span class="slider"></span></label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: INTERFACE -->
+    <div class="section" data-section="ui">
+      <div class="section-header" onclick="toggleSection('ui')">
+        <span class="section-icon">🎨</span>
+        <span class="section-title">Interface</span>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+
+        <div class="control-item" id="item-darkMode">
+          <div class="control-info">
+            <span class="control-name">Dark Mode Forcé</span>
+            <span class="control-desc">Override CSS du site en dark extrême</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="darkMode"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-systemFonts">
+          <div class="control-info">
+            <span class="control-name">Polices Système</span>
+            <span class="control-desc">Évite le chargement de web fonts</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="systemFonts"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-noSticky">
+          <div class="control-info">
+            <span class="control-name">Supprimer Sticky</span>
+            <span class="control-desc">Convertit position:sticky en relative</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="noSticky"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-noPopups">
+          <div class="control-info">
+            <span class="control-name">Bloquer Popups/Cookies</span>
+            <span class="control-desc">Cache banners GDPR, consent, newsletters</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="noPopups"><span class="slider"></span></label>
+        </div>
+
+        <div class="control-item" id="item-readerMode">
+          <div class="control-info">
+            <span class="control-name">Mode Lecture</span>
+            <span class="control-desc">Extrait le contenu principal, vue épurée</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="readerMode"><span class="slider"></span></label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION: ADVANCED -->
+    <div class="section collapsed" data-section="adv">
+      <div class="section-header" onclick="toggleSection('adv')">
+        <span class="section-icon">🛠️</span>
+        <span class="section-title">Avancé</span>
+        <span class="section-chevron">▼</span>
+      </div>
+      <div class="section-body">
+
+        <div class="control-item" id="item-customCSS">
+          <div class="control-info">
+            <span class="control-name">CSS Personnalisé</span>
+            <span class="control-desc">Injecter votre propre CSS sur tous les sites</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="customCSS"><span class="slider"></span></label>
+        </div>
+
+        <div class="textarea-wrap" id="customCSSArea" style="display:none">
+          <span class="textarea-label">CSS à injecter</span>
+          <textarea class="pm-textarea" id="customCSSCode" placeholder="/* votre CSS ici */&#10;* { cursor: crosshair !important; }"></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-item" id="item-whitelist">
+          <div class="control-info">
+            <span class="control-name">Whitelist de Domaines</span>
+            <span class="control-desc">Désactiver Potato Mode sur ces sites</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="whitelist"><span class="slider"></span></label>
+        </div>
+
+        <div class="textarea-wrap" id="whitelistArea" style="display:none">
+          <span class="textarea-label">Domaines (un par ligne)</span>
+          <textarea class="pm-textarea" id="whitelistDomains" placeholder="youtube.com&#10;netflix.com&#10;figma.com"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">ACTIF</span>
+    </div>
+    <a href="https://github.com/djael-ml" target="_blank" class="footer-link">by djael-ml 🥔</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

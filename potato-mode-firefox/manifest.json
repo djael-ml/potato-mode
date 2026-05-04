@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Potato Mode",
+  "version": "1.2",
+  "description": "Optimisez votre navigation : désactivez les animations, bloquez les GIFs, passez en mode sombre forcé et économisez des ressources pour une expérience web ultra-rapide.",
+  "author": "djael-ml",
+  "permissions": ["storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icons/icon128.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "128": "icons/icon128.png",
+    "48": "icons/icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "potato-mode@djael-ml.github",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

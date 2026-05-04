@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Potato Mode",
+  "version": "2.0",
+  "description": "Transform any website into a blazing-fast potato. Kill animations, block images, force dark mode, and turbocharge your browser for extreme performance.",
+  "author": "djael-ml",
+  "permissions": ["storage", "scripting", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icons/icon128.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "128": "icons/icon128.png",
+    "48": "icons/icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["reader.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
