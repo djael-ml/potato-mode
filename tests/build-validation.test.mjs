@@ -70,6 +70,11 @@ describe('MV3 Build Validation (Chrome & Firefox Parity)', () => {
       assert.ok(manifest.permissions.includes('declarativeNetRequest'));
       assert.ok(manifest.permissions.includes('alarms'));
       assert.ok(manifest.permissions.includes('tabs'));
+      // Must exclude extension popups (chrome-extension://, moz-extension://)
+      assert.deepEqual(manifest.host_permissions, ['http://*/*', 'https://*/*']);
+      for (const cs of manifest.content_scripts) {
+        assert.deepEqual(cs.matches, ['http://*/*', 'https://*/*']);
+      }
 
       if (build.name === 'chrome') {
         assert.equal(manifest.background.service_worker, 'background/background.js');
@@ -125,6 +130,14 @@ describe('MV3 Build Validation (Chrome & Firefox Parity)', () => {
       assert.ok(/animation-duration\s*:\s*0\.001ms/i.test(cssNoComments), 'Must use 0.001ms safe completion');
       assert.equal(/\[class\*="banner"\]/i.test(cssNoComments), false, 'No destructive generic banner rule');
       assert.equal(/\[class\*="popup"\]/i.test(cssNoComments), false, 'No destructive generic popup rule');
+
+      // Layout regression guard: scrollable settings/RAM views must use block layout (never flex-shrink clip cards)
+      assert.ok(/\.view\.scrollable\s*\{[^}]*display\s*:\s*block/i.test(popupCss), 'Scrollable views must use display: block');
+
+      // Extension popup exclusion guard in DNR background rules
+      const bgJs = fs.readFileSync(path.join(build.dir, 'background', 'background.js'), 'utf8');
+      assert.ok(bgJs.includes("urlFilter: '|http'"), 'DNR rules must target HTTP(S) only, excluding extension popups');
+      assert.equal(bgJs.includes('Scan manuel'), false, 'Auto Adaptive must never label itself as Scan manuel');
     });
 
     it(`[${build.name}] passes Node.js syntax check on all generated JS files`, () => {

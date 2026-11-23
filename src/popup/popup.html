@@ -80,23 +80,31 @@
 
           <div class="hairline"></div>
 
-          <button type="button" class="scan-pill-btn" id="scanBtn">
-            <svg class="scan-glyph" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 3a9 9 0 1 0 9 9"/>
-              <path d="M12 7v5l3 2"/>
-              <path d="M17 3h4v4"/>
-              <path d="M21 3l-5 5"/>
-            </svg>
-            <span id="scanBtnText">Scanner mon PC</span>
-          </button>
+          <!-- Shown ONLY when Auto Adaptive is active -->
+          <div class="auto-live-note" id="autoLiveNote">
+            Réévaluation automatique toutes les 60 s
+          </div>
 
-          <details class="scan-disclosure" id="scanDisclosure" hidden>
-            <summary id="scanSummaryLine">Diagnostic prêt</summary>
-            <div class="scan-details-body">
-              <div class="specs-line" id="scanSpecs"></div>
-              <ul class="reasons-list" id="scanReasons"></ul>
-            </div>
-          </details>
+          <!-- Shown ONLY when Auto Adaptive is OFF (Manual / Scanned mode) -->
+          <div class="scan-zone" id="scanZone" hidden>
+            <button type="button" class="scan-pill-btn" id="scanBtn">
+              <svg class="scan-glyph" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3a9 9 0 1 0 9 9"/>
+                <path d="M12 7v5l3 2"/>
+                <path d="M17 3h4v4"/>
+                <path d="M21 3l-5 5"/>
+              </svg>
+              <span id="scanBtnText">Scanner mon PC</span>
+            </button>
+
+            <details class="scan-disclosure" id="scanDisclosure" hidden>
+              <summary id="scanSummaryLine">Diagnostic prêt</summary>
+              <div class="scan-details-body">
+                <div class="specs-line" id="scanSpecs"></div>
+                <ul class="reasons-list" id="scanReasons"></ul>
+              </div>
+            </details>
+          </div>
         </div>
 
         <!-- Quiet Current Site Row -->
@@ -380,7 +388,7 @@
 
     <!-- ULTRA-DISCREET FOOTER -->
     <footer class="footer">
-      <span>v3.1</span>
+      <span>v3.1.1</span>
       <a href="https://github.com/djael-ml/potato-mode" target="_blank" rel="noopener noreferrer" class="github-link">djael-ml</a>
     </footer>
   </div>

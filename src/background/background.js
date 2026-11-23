@@ -127,6 +127,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
           action: { type: 'block' },
           condition: {
             ...baseCondition,
+            urlFilter: '|http',
             resourceTypes: ['font']
           }
         });
@@ -139,7 +140,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
           action: { type: 'block' },
           condition: {
             ...baseCondition,
-            urlFilter: '.gif',
+            urlFilter: '|http*.gif',
             resourceTypes: ['image']
           }
         });
@@ -152,6 +153,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
           action: { type: 'block' },
           condition: {
             ...baseCondition,
+            urlFilter: '|http',
             resourceTypes: ['image', 'imageset']
           }
         });
@@ -164,6 +166,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
           action: { type: 'block' },
           condition: {
             ...baseCondition,
+            urlFilter: '|http',
             resourceTypes: ['media']
           }
         });
@@ -409,20 +412,17 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
 
     const report = scanner.evaluateScan(scanInput);
 
+    // One-shot manual scan locks the calibrated profile and disables Auto Adaptive cleanly
     const toSave = {
       ...report.recommendedSettings,
+      controlMode: 'scanned',
+      autoAdaptiveMode: false,
       lastScanReport: report,
-      lastAutoSwitch: {
-        from: (await loadSettings()).activeProfile,
-        to: report.profileId,
-        toLabel: report.profileLabel,
-        reason: 'Scan manuel',
-        at: Date.now()
-      }
+      lastAutoSwitch: null
     };
     await api.storageSet(toSave);
 
-    // Cache client environment hints (battery/network/bench) for background auto-adaptive checks
+    // Cache client environment hints (battery/network/bench) for future auto-adaptive checks
     await api.storageSet({
       [STORAGE_CLIENT_ENV]: {
         hardwareConcurrency: clientMetrics.hardwareConcurrency ?? null,
@@ -447,9 +447,32 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
 
   // ---------------- Real-Time Auto-Adaptive Mode ----------------
 
+  function buildLiveAutoReason(report) {
+    const specs = (report && report.detectedSpecs) || {};
+    if (typeof specs.ramFreePercent === 'number' && specs.ramFreePercent < 15) {
+      return `RAM libre ${specs.ramFreePercent}%`;
+    }
+    if (typeof specs.cpuLoadPercent === 'number' && specs.cpuLoadPercent >= 80) {
+      return `CPU à ${specs.cpuLoadPercent}%`;
+    }
+    if (typeof specs.loadedTabsCount === 'number' && specs.loadedTabsCount >= 18) {
+      return `${specs.loadedTabsCount} onglets en RAM`;
+    }
+    if (specs.onBattery === true && typeof specs.batteryLevel === 'number') {
+      return `Batterie ${specs.batteryLevel}%`;
+    }
+    if (typeof specs.ramFreePercent === 'number') {
+      return `RAM libre ${specs.ramFreePercent}%`;
+    }
+    if (typeof specs.loadedTabsCount === 'number') {
+      return `${specs.loadedTabsCount} onglets en RAM`;
+    }
+    return 'Surveillance active';
+  }
+
   async function runAutoAdaptiveEvaluation(forceImmediate = false) {
     const cfg = await loadSettings();
-    if (!cfg.enabled || !cfg.autoAdaptiveMode) {
+    if (!cfg.enabled || !cfg.autoAdaptiveMode || cfg.controlMode !== 'auto') {
       return { switched: false, reason: 'disabled' };
     }
 
@@ -480,6 +503,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
       ramSource = 'deviceMemory';
     }
 
+    // Auto Adaptive makes its OWN live estimation (does not rely on manual scan results)
     const scanInput = {
       cpuCores: cpuStats.cpuCores ?? cachedEnv.hardwareConcurrency ?? (typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : null),
       cpuModel: cpuStats.cpuModel,
@@ -488,7 +512,7 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
       ramAvailableGB,
       ramFreePercent,
       ramSource,
-      benchmarkMs: cachedEnv.benchmarkMs ?? null,
+      benchmarkMs: null,
       openTabsCount,
       loadedTabsCount,
       discardedTabsCount,
@@ -499,23 +523,36 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
     };
 
     const report = scanner.evaluateScan(scanInput);
+    const liveReason = buildLiveAutoReason(report);
     const lastAt = forceImmediate ? 0 : ((cfg.lastAutoSwitch && cfg.lastAutoSwitch.at) || 0);
     const decision = scanner.decideAdaptiveTransition(cfg.activeProfile, report, lastAt, Date.now());
 
     if (!decision.shouldSwitch) {
+      // Refresh live telemetry status even when profile stays unchanged
+      await api.storageSet({
+        lastAutoSwitch: {
+          from: cfg.activeProfile,
+          to: cfg.activeProfile,
+          toLabel: (defaults.PROFILES[cfg.activeProfile] && defaults.PROFILES[cfg.activeProfile].label) || cfg.activeProfile,
+          reason: liveReason,
+          at: (cfg.lastAutoSwitch && cfg.lastAutoSwitch.at) || Date.now(),
+          checkedAt: Date.now()
+        }
+      });
       return { switched: false, reason: decision.reason, report };
     }
 
     await api.storageSet({
       ...decision.recommendedSettings,
+      controlMode: 'auto',
       autoAdaptiveMode: true,
-      lastScanReport: report,
       lastAutoSwitch: {
         from: decision.fromProfileId,
         to: decision.nextProfileId,
         toLabel: decision.nextProfileLabel,
-        reason: decision.reason,
-        at: decision.timestamp
+        reason: decision.reason || liveReason,
+        at: decision.timestamp,
+        checkedAt: decision.timestamp
       }
     });
 

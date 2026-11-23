@@ -1,10 +1,11 @@
 (function (root) {
   'use strict';
 
-  const VERSION = '3.1.0';
+  const VERSION = '3.1.1';
 
   const DEFAULTS = {
     enabled: true,
+    controlMode: 'auto', // 'auto' | 'scanned' | 'manual'
     autoAdaptiveMode: true,
     activeProfile: 'balanced',
     lastAutoSwitch: null,

@@ -143,26 +143,43 @@
     const badge = $('headerBadge');
     const prof = defaults.PROFILES[state.activeProfile];
     const profName = prof ? prof.label : 'Perso';
+    const isAuto = !!state.autoAdaptiveMode && state.controlMode === 'auto';
+    const isScanned = !isAuto && state.controlMode === 'scanned';
 
     if (visualState === 'inactive') badge.textContent = 'OFF';
     else if (visualState === 'paused') badge.textContent = 'Pause';
     else if (visualState === 'error') badge.textContent = 'Système';
-    else if (state.autoAdaptiveMode) badge.textContent = `Auto · ${profName}`;
+    else if (isAuto) badge.textContent = `Auto · ${profName}`;
+    else if (isScanned) badge.textContent = `Scanné · ${profName}`;
     else badge.textContent = profName;
 
-    // Adaptive status caption
+    // Adaptive status caption — 100% mutually exclusive between Auto, Scanned, and Manual
     const adaptiveSub = $('adaptiveStatus');
+    const autoNote = $('autoLiveNote');
+    const scanZone = $('scanZone');
+
     if (!state.enabled) {
       adaptiveSub.textContent = 'Potato Mode désactivé';
-    } else if (state.autoAdaptiveMode) {
+      autoNote.hidden = true;
+      scanZone.hidden = true;
+    } else if (isAuto) {
       const sw = state.lastAutoSwitch;
-      if (sw && sw.reason && sw.to === state.activeProfile) {
+      if (sw && sw.reason) {
         adaptiveSub.textContent = `${profName} · ${sw.reason}`;
       } else {
-        adaptiveSub.textContent = `Actif (${profName}) · s'ajuste en temps réel`;
+        adaptiveSub.textContent = `Estimation continue (${profName})`;
       }
+      autoNote.hidden = false;
+      autoNote.textContent = 'Réévaluation automatique toutes les 60 s';
+      scanZone.hidden = true;
+    } else if (isScanned) {
+      adaptiveSub.textContent = `Calibré par scan (${profName}) · fixe`;
+      autoNote.hidden = true;
+      scanZone.hidden = false;
     } else {
-      adaptiveSub.textContent = `Profil manuel · ${profName}`;
+      adaptiveSub.textContent = `Profil manuel (${profName})`;
+      autoNote.hidden = true;
+      scanZone.hidden = false;
     }
 
     // Current site row
@@ -256,7 +273,8 @@
 
   function renderScanDisclosure(report) {
     const disc = $('scanDisclosure');
-    if (!report || !report.detectedSpecs) {
+    // Only show manual scan diagnostic in Scanned mode (never in Auto mode)
+    if (!report || !report.detectedSpecs || state.controlMode !== 'scanned' || state.autoAdaptiveMode) {
       disc.hidden = true;
       return;
     }
@@ -434,12 +452,23 @@
       el.addEventListener('change', async (e) => {
         const checked = e.target.checked;
         if (key === 'autoAdaptiveMode') {
-          await savePartial({ autoAdaptiveMode: checked });
-          if (checked && state.enabled) {
-            const env = await collectClientEnv(false);
-            await api.runtimeSendMessage({ action: 'updateClientEnv', env });
-            await api.runtimeSendMessage({ action: 'triggerAutoAdaptive' });
-            await refreshTelemetry();
+          if (checked) {
+            await savePartial({
+              autoAdaptiveMode: true,
+              controlMode: 'auto',
+              lastAutoSwitch: null
+            });
+            if (state.enabled) {
+              const env = await collectClientEnv(false);
+              await api.runtimeSendMessage({ action: 'updateClientEnv', env });
+              await api.runtimeSendMessage({ action: 'triggerAutoAdaptive' });
+              await refreshTelemetry();
+            }
+          } else {
+            await savePartial({
+              autoAdaptiveMode: false,
+              controlMode: 'manual'
+            });
           }
           return;
         }
@@ -449,6 +478,7 @@
         if (key !== 'enabled' && key !== 'whitelist' && key !== 'customCSS' && key !== 'ramProtectForms') {
           patch.activeProfile = 'custom';
           patch.autoAdaptiveMode = false;
+          patch.controlMode = 'manual';
         }
         savePartial(patch);
       });
@@ -459,7 +489,12 @@
       btn.addEventListener('click', () => {
         const profile = defaults.PROFILES[btn.dataset.profile];
         if (!profile) return;
-        savePartial({ ...profile.settings, enabled: true, autoAdaptiveMode: false });
+        savePartial({
+          ...profile.settings,
+          enabled: true,
+          autoAdaptiveMode: false,
+          controlMode: 'manual'
+        });
       });
     });
 
@@ -476,7 +511,7 @@
       }
     });
 
-    // Adaptive PC Scan button
+    // Manual one-shot PC Scan button (mutually exclusive with Auto Adaptive)
     $('scanBtn').addEventListener('click', async () => {
       const btn = $('scanBtn');
       const txt = $('scanBtnText');
@@ -490,9 +525,10 @@
         if (res && res.ok && res.report) {
           Object.assign(state, res.report.recommendedSettings, {
             lastScanReport: res.report,
-            autoAdaptiveMode: true
+            controlMode: 'scanned',
+            autoAdaptiveMode: false,
+            lastAutoSwitch: null
           });
-          await api.storageSet({ autoAdaptiveMode: true });
           txt.textContent = `Profil ${res.report.profileLabel} appliqué`;
           await refreshTelemetry();
         } else {
@@ -507,11 +543,21 @@
 
     // RAM controls
     $('ramIdleMinutes').addEventListener('change', (e) => {
-      savePartial({ ramIdleMinutes: Number(e.target.value), activeProfile: 'custom', autoAdaptiveMode: false });
+      savePartial({
+        ramIdleMinutes: Number(e.target.value),
+        activeProfile: 'custom',
+        autoAdaptiveMode: false,
+        controlMode: 'manual'
+      });
     });
 
     $('ramMaxActiveTabs').addEventListener('change', (e) => {
-      savePartial({ ramMaxActiveTabs: Number(e.target.value), activeProfile: 'custom', autoAdaptiveMode: false });
+      savePartial({
+        ramMaxActiveTabs: Number(e.target.value),
+        activeProfile: 'custom',
+        autoAdaptiveMode: false,
+        controlMode: 'manual'
+      });
     });
 
     $('discardNowBtn').addEventListener('click', async () => {

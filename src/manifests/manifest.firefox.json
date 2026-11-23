@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Potato Mode",
-  "version": "3.1.0",
-  "description": "Optimisation web adaptative : scan matériel auto, limiteur de RAM par onglets, blocage réseau MV3, score temps réel et mode ultra-léger.",
+  "version": "3.1.1",
+  "description": "Optimisation web adaptative : mode auto temps réel, limiteur de RAM par onglets, blocage réseau MV3 et score temps réel.",
   "author": "djael-ml",
   "permissions": [
     "storage",
@@ -11,7 +11,8 @@
     "declarativeNetRequest"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "http://*/*",
+    "https://*/*"
   ],
   "icons": {
     "16": "icons/active-16.png",
@@ -41,7 +42,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "css": ["content/content.css"],
       "js": [
         "shared/browser-api.js",

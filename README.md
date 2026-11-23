@@ -55,17 +55,17 @@ Toutes les versions **Chrome** et **Firefox** (archives `.zip` pour décompressi
 
 | Navigateur | Archive ZIP (Unpacked / Store) | Package (Packed) |
 | :--- | :--- | :--- |
-| **Chrome / Brave / Edge** | `potato-mode-chrome-v3.1.0.zip` | `potato-mode-chrome-v3.1.0.crx` |
-| **Firefox** | `potato-mode-firefox-v3.1.0.zip` | `potato-mode-firefox-v3.1.0.xpi` |
+| **Chrome / Brave / Edge** | `potato-mode-chrome-v3.1.1.zip` | `potato-mode-chrome-v3.1.1.crx` |
+| **Firefox** | `potato-mode-firefox-v3.1.1.zip` | `potato-mode-firefox-v3.1.1.xpi` |
 
 ### Installation rapide
 
 #### Chrome / Brave / Edge
-1. Téléchargez `potato-mode-chrome-v3.1.0.zip` depuis les [Releases](https://github.com/djael-ml/potato-mode/releases) et décompressez-le *(ou lancez `node scripts/release.mjs` en local pour générer `releases/unpacked/chrome/`)*.
+1. Téléchargez `potato-mode-chrome-v3.1.1.zip` depuis les [Releases](https://github.com/djael-ml/potato-mode/releases) et décompressez-le *(ou lancez `node scripts/release.mjs` en local pour générer `releases/unpacked/chrome/`)*.
 2. Ouvrez `chrome://extensions`, activez le **Mode développeur**, puis cliquez sur **Charger l'extension non empaquetée**.
 
 #### Firefox
-1. Téléchargez `potato-mode-firefox-v3.1.0.zip` (ou `.xpi`) depuis les [Releases](https://github.com/djael-ml/potato-mode/releases).
+1. Téléchargez `potato-mode-firefox-v3.1.1.zip` (ou `.xpi`) depuis les [Releases](https://github.com/djael-ml/potato-mode/releases).
 2. Ouvrez `about:debugging#/runtime/this-firefox` → **Charger un module complémentaire temporaire…** → sélectionnez `manifest.json` (ou installez directement le `.xpi` sur Firefox Developer Edition / Nightly).
 
 ---

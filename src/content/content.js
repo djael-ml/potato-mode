@@ -3,6 +3,15 @@
 (function () {
   'use strict';
 
+  // Never impact extension popups, browser UI, or non-HTTP(S) pages
+  if (
+    typeof window === 'undefined' ||
+    !window.location ||
+    (window.location.protocol !== 'http:' && window.location.protocol !== 'https:')
+  ) {
+    return;
+  }
+
   const { api, defaults } = globalThis.PotatoMode || {};
   if (!api || !defaults) return;
 

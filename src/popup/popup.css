@@ -260,12 +260,13 @@ body[data-state="error"] .state-pill {
 }
 
 .view[hidden] {
-  display: none;
+  display: none !important;
 }
 
 .view.scrollable {
+  display: block;
   overflow-y: auto;
-  padding-right: 2px;
+  padding: 0 3px 16px 0;
   scrollbar-width: thin;
   scrollbar-color: var(--stroke-strong) transparent;
 }
@@ -284,10 +285,41 @@ body[data-state="error"] .state-pill {
   border-radius: 18px;
 }
 
+.glass-group {
+  margin-bottom: 4px;
+}
+
 /* ====== VIEW 1: ACCUEIL (AIRY & SERENE) ====== */
 #view-home {
   justify-content: space-between;
   gap: 12px;
+  overflow-y: auto;
+  padding-right: 1px;
+}
+
+#view-home > * {
+  flex-shrink: 0;
+}
+
+.scan-zone[hidden] {
+  display: none !important;
+}
+
+.scan-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auto-live-note {
+  font-size: 11px;
+  color: var(--text-2);
+  text-align: center;
+  padding: 2px 4px;
+}
+
+.auto-live-note[hidden] {
+  display: none !important;
 }
 
 .score-hero {
