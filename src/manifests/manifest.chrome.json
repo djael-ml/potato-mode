@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "Potato Mode",
+  "version": "3.0.0",
+  "description": "Optimisation web adaptative : scan matériel auto, limiteur de RAM par onglets, blocage réseau MV3, score temps réel et mode ultra-léger.",
+  "author": "djael-ml",
+  "permissions": [
+    "storage",
+    "tabs",
+    "alarms",
+    "declarativeNetRequest",
+    "system.memory",
+    "system.cpu"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "icons/active-16.png",
+    "32": "icons/active-32.png",
+    "48": "icons/active-48.png",
+    "96": "icons/active-96.png",
+    "128": "icons/active-128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Potato Mode",
+    "default_icon": {
+      "16": "icons/active-16.png",
+      "32": "icons/active-32.png",
+      "48": "icons/active-48.png",
+      "128": "icons/active-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "css": ["content/content.css"],
+      "js": [
+        "shared/browser-api.js",
+        "shared/defaults.js",
+        "content/content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "commands": {
+    "toggle-global": {
+      "suggested_key": {
+        "default": "Alt+Shift+P"
+      },
+      "description": "Activer ou désactiver Potato Mode globalement"
+    },
+    "toggle-site": {
+      "suggested_key": {
+        "default": "Alt+Shift+W"
+      },
+      "description": "Exclure ou réactiver le site courant"
+    }
+  }
+}

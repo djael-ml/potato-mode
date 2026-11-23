@@ -1,0 +1,16 @@
+{
+  "name": "potato-mode",
+  "version": "3.0.0",
+  "private": true,
+  "description": "Potato Mode — Cross-browser adaptive web performance optimizer & RAM limiter (Chrome + Firefox MV3)",
+  "scripts": {
+    "icons": "node scripts/generate-icons.mjs",
+    "build": "node scripts/build.mjs",
+    "pack": "node scripts/pack.mjs",
+    "release": "node scripts/release.mjs",
+    "test": "node --test tests/whitelist.test.mjs tests/scanner-engine.test.mjs tests/perf-score.test.mjs tests/ram-policy.test.mjs tests/build-validation.test.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

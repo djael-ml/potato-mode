@@ -1,0 +1,79 @@
+name: Build & Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, Test & Publish Chrome/Firefox Packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build & pack Chrome + Firefox extensions
+        run: node scripts/release.mjs
+
+      - name: Run automated validation & unit tests
+        run: node --test tests/whitelist.test.mjs tests/scanner-engine.test.mjs tests/perf-score.test.mjs tests/ram-policy.test.mjs tests/build-validation.test.mjs
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME}"
+          if [[ "$TAG" != v* ]]; then
+            TAG="v${VERSION}"
+          fi
+
+          NOTES=$(cat <<EOF
+          ## Potato Mode ${TAG} — Chrome & Firefox (MV3)
+
+          ### Téléchargements
+          - **Chrome / Brave / Edge (ZIP / Unpacked & Store)** : \`potato-mode-chrome-v${VERSION}.zip\`
+          - **Chrome / Brave / Edge (Packed CRX3)** : \`potato-mode-chrome-v${VERSION}.crx\`
+          - **Firefox (ZIP / Unpacked & AMO)** : \`potato-mode-firefox-v${VERSION}.zip\`
+          - **Firefox (Packed XPI)** : \`potato-mode-firefox-v${VERSION}.xpi\`
+          - **Empreintes SHA-256** : \`SHA256SUMS.txt\`
+
+          ### Nouveautés
+          - Icône dynamique minimaliste en 5 états (Actif, Désactivé, Site exclu, Patate Max, Page système) × 5 tailles (16 à 128 px + SVG)
+          - Gros bouton **Scanner & Adapter mon PC** (calibrage réel CPU, RAM, onglets, batterie, réseau)
+          - Limiteur de RAM réel via \`tabs.discard\` + \`alarms\` avec protection des formulaires
+          - Score de performance 100 % réel (FPS, Long Tasks, DOM, mémoire/onglets)
+          - Blocage réseau natif MV3 (\`declarativeNetRequest\`) pour WebFonts, GIFs, images et flux médias
+          - Correctif Perplexity / SPA (\`animation-duration: 0.001ms\`), anti-cookies CMP chirurgical et refonte UI Apple Glassmorphism adaptative
+          EOF
+          )
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              "releases/zip/potato-mode-chrome-v${VERSION}.zip" \
+              "releases/zip/potato-mode-firefox-v${VERSION}.zip" \
+              "releases/packed/potato-mode-chrome-v${VERSION}.crx" \
+              "releases/packed/potato-mode-firefox-v${VERSION}.xpi" \
+              "releases/SHA256SUMS.txt" \
+              --clobber
+          else
+            gh release create "$TAG" \
+              "releases/zip/potato-mode-chrome-v${VERSION}.zip" \
+              "releases/zip/potato-mode-firefox-v${VERSION}.zip" \
+              "releases/packed/potato-mode-chrome-v${VERSION}.crx" \
+              "releases/packed/potato-mode-firefox-v${VERSION}.xpi" \
+              "releases/SHA256SUMS.txt" \
+              --title "Potato Mode ${TAG}" \
+              --notes "$NOTES"
+          fi

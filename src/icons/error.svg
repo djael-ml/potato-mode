@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg-error" x1="15%" y1="5%" x2="85%" y2="95%">
+      <stop offset="0%" stop-color="rgb(82,82,88)"/>
+      <stop offset="100%" stop-color="rgb(48,48,54)"/>
+    </linearGradient>
+    <radialGradient id="gloss-error" cx="32%" cy="24%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="body-error" x1="30%" y1="15%" x2="70%" y2="95%">
+      <stop offset="0%" stop-color="rgb(192,192,198)"/>
+      <stop offset="100%" stop-color="rgb(152,152,160)"/>
+    </linearGradient>
+    <linearGradient id="sprout-error" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgb(156,156,164)"/>
+      <stop offset="100%" stop-color="rgb(118,118,126)"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg-error)"/>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#gloss-error)"/>
+  <rect x="9.5" y="9.5" width="109" height="109" rx="26.5" fill="none" stroke="rgb(210,210,218)" stroke-opacity="0.22" stroke-width="2"/>
+  <ellipse cx="73.5" cy="26.5" rx="12" ry="6" transform="rotate(-33 73.5 26.5)" fill="url(#sprout-error)"/>
+  <ellipse cx="58.5" cy="28" rx="8.6" ry="4.6" transform="rotate(41 58.5 28)" fill="url(#sprout-error)"/>
+  <g transform="rotate(-14 64 68)">
+    <path d="M64 31 C82 31 94 48 96 69 C98 92 84 107 64 107 C44 107 32 92 34 69 C36 48 46 31 64 31 Z" fill="url(#body-error)"/>
+    <ellipse cx="74" cy="61" rx="4.2" ry="2.6" fill="rgb(84,84,92)" fill-opacity="0.35"/>
+    <ellipse cx="55" cy="80" rx="3.4" ry="2.2" fill="rgb(84,84,92)" fill-opacity="0.35"/>
+    <ellipse cx="69" cy="88" rx="2.8" ry="1.8" fill="rgb(84,84,92)" fill-opacity="0.35"/>
+  </g>
+  <circle cx="96.6" cy="96.6" r="26.2" fill="#ffffff" fill-opacity="0.92"/>
+  <circle cx="96.6" cy="96.6" r="22.8" fill="rgb(255,69,58)"/>
+  <rect x="94" y="85.6" width="5.2" height="14.5" rx="2.4" fill="rgb(255,255,255)"/>
+      <circle cx="96.6" cy="105.19999999999999" r="3" fill="rgb(255,255,255)"/>
+</svg>

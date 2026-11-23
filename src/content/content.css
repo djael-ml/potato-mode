@@ -1,0 +1,317 @@
+/*
+ * POTATO MODE v3.0 — Content Stylesheet
+ * Applied on <html> at document_start to eliminate visual flash (FOUC).
+ * Perplexity/SPA-safe animations, GPU compositing killer, surgical CMP blocker.
+ */
+
+/* =========================================================
+   PERFORMANCE: Safe Animation Neutralizer (Fixes SPA/Perplexity!)
+   Completes animations in 0.001ms instead of `animation: none`
+   so opacity:0 -> 1 fade-ins and `animationend` events still work.
+   ========================================================= */
+html.pm-no-animations,
+html.pm-no-animations * {
+  scroll-behavior: auto !important;
+}
+
+html.pm-no-animations *,
+html.pm-no-animations *::before,
+html.pm-no-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0s !important;
+}
+
+/* =========================================================
+   PERFORMANCE: Kill Heavy GPU Compositing
+   Removes backdrop-filter blur & blend modes (major GPU/battery drain)
+   ========================================================= */
+html.pm-kill-gpu * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* =========================================================
+   PERFORMANCE: Clean up will-change composite layer abuse
+   ========================================================= */
+html.pm-no-will-change * {
+  will-change: auto !important;
+}
+
+/* =========================================================
+   PERFORMANCE: Content Visibility (Offscreen rendering skip)
+   ========================================================= */
+html.pm-content-visibility article,
+html.pm-content-visibility section,
+html.pm-content-visibility aside,
+html.pm-content-visibility footer,
+html.pm-content-visibility [class*="card"]:not([style*="fixed"]),
+html.pm-content-visibility [class*="feed-item"] {
+  content-visibility: auto !important;
+  contain-intrinsic-size: auto 320px !important;
+}
+
+/* =========================================================
+   VISUAL: Flat Design (Remove shadows & rounded corners)
+   ========================================================= */
+html.pm-no-ui-effects * {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* =========================================================
+   MEDIA: Grayscale media
+   ========================================================= */
+html.pm-grayscale img,
+html.pm-grayscale video,
+html.pm-grayscale canvas,
+html.pm-grayscale picture {
+  filter: grayscale(100%) contrast(106%) !important;
+}
+
+/* =========================================================
+   MEDIA: GIF blocking (CSS fallback alongside DNR network rule)
+   ========================================================= */
+html.pm-no-gifs img[src$=".gif" i],
+html.pm-no-gifs img[src*=".gif?" i],
+html.pm-no-gifs img[data-src$=".gif" i] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* =========================================================
+   MEDIA: Block Images (Safe: never hides text containers!)
+   ========================================================= */
+html.pm-block-images img,
+html.pm-block-images picture,
+html.pm-block-images video[poster] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+html.pm-block-images img,
+html.pm-block-images picture {
+  display: none !important;
+}
+
+html.pm-block-images [style*="background-image"] {
+  background-image: none !important;
+}
+
+/* =========================================================
+   MEDIA: Block Embedded Iframes / Objects
+   ========================================================= */
+html.pm-block-iframes iframe,
+html.pm-block-iframes embed,
+html.pm-block-iframes object {
+  display: none !important;
+}
+
+/* =========================================================
+   INTERFACE: System Fonts Only (paired with DNR font blocking)
+   ========================================================= */
+html.pm-system-fonts,
+html.pm-system-fonts body,
+html.pm-system-fonts * {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+html.pm-system-fonts code,
+html.pm-system-fonts pre,
+html.pm-system-fonts kbd,
+html.pm-system-fonts samp {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace !important;
+}
+
+/* =========================================================
+   INTERFACE: Smart Surface-Aware Dark Mode
+   Preserves opaque surfaces for modals, menus & popovers!
+   ========================================================= */
+html.pm-dark-mode {
+  color-scheme: dark !important;
+  background-color: #0e0e11 !important;
+}
+
+html.pm-dark-mode body {
+  background-color: #0e0e11 !important;
+  color: #e4e4e7 !important;
+}
+
+html.pm-dark-mode main,
+html.pm-dark-mode article,
+html.pm-dark-mode section,
+html.pm-dark-mode header,
+html.pm-dark-mode footer,
+html.pm-dark-mode nav,
+html.pm-dark-mode aside {
+  background-color: #141418 !important;
+  color: #e4e4e7 !important;
+  border-color: #27272e !important;
+}
+
+html.pm-dark-mode [role="dialog"],
+html.pm-dark-mode [role="menu"],
+html.pm-dark-mode [role="listbox"],
+html.pm-dark-mode [role="tooltip"],
+html.pm-dark-mode dialog {
+  background-color: #1c1c22 !important;
+  color: #f4f4f5 !important;
+  border-color: #32323c !important;
+}
+
+html.pm-dark-mode p,
+html.pm-dark-mode span,
+html.pm-dark-mode li,
+html.pm-dark-mode h1,
+html.pm-dark-mode h2,
+html.pm-dark-mode h3,
+html.pm-dark-mode h4,
+html.pm-dark-mode h5,
+html.pm-dark-mode h6,
+html.pm-dark-mode td,
+html.pm-dark-mode th,
+html.pm-dark-mode label {
+  color: #e4e4e7 !important;
+}
+
+html.pm-dark-mode a {
+  color: #64b5ff !important;
+}
+
+html.pm-dark-mode a:visited {
+  color: #b794f4 !important;
+}
+
+html.pm-dark-mode code,
+html.pm-dark-mode pre {
+  background-color: #1a1b22 !important;
+  color: #a6e3a1 !important;
+  border-color: #2d2f3a !important;
+}
+
+html.pm-dark-mode input,
+html.pm-dark-mode textarea,
+html.pm-dark-mode select,
+html.pm-dark-mode button {
+  background-color: #1e1e26 !important;
+  color: #f4f4f5 !important;
+  border-color: #383844 !important;
+}
+
+/* =========================================================
+   INTERFACE: Surgical Cookie / CMP Blocker (Zero false positives)
+   Targets known Consent Management Platforms only.
+   ========================================================= */
+html.pm-no-popups #onetrust-consent-sdk,
+html.pm-no-popups #onetrust-banner-sdk,
+html.pm-no-popups .onetrust-pc-dark-filter,
+html.pm-no-popups #CybotCookiebotDialog,
+html.pm-no-popups #CybotCookiebotDialogBodyUnderlay,
+html.pm-no-popups #didomi-host,
+html.pm-no-popups #didomi-popup,
+html.pm-no-popups .didomi-popup-backdrop,
+html.pm-no-popups #axeptio_overlay,
+html.pm-no-popups .qc-cmp2-container,
+html.pm-no-popups #qc-cmp2-container,
+html.pm-no-popups .cc-window,
+html.pm-no-popups .cc-banner,
+html.pm-no-popups #tarteaucitronRoot,
+html.pm-no-popups #truste-consent-track,
+html.pm-no-popups .cky-consent-container,
+html.pm-no-popups .cky-overlay,
+html.pm-no-popups #cmplz-cookiebanner-container,
+html.pm-no-popups .klaro .cookie-notice,
+html.pm-no-popups .klaro .cookie-modal,
+html.pm-no-popups [id^="sp_message_container_"],
+html.pm-no-popups .fc-consent-root {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* =========================================================
+   INTERFACE: Lightweight Sticky Bar Neutralizer
+   ========================================================= */
+html.pm-no-sticky [style*="position: sticky"],
+html.pm-no-sticky [style*="position:sticky"],
+html.pm-no-sticky [data-pm-unstick="1"] {
+  position: relative !important;
+}
+
+/* =========================================================
+   INTERFACE: Apple-Style Reversible Reader Mode
+   ========================================================= */
+html.pm-reader-active body > *:not(#pm-reader-overlay) {
+  display: none !important;
+}
+
+#pm-reader-overlay {
+  display: block !important;
+  min-height: 100vh !important;
+  background: #fbfaf7 !important;
+  color: #1d1d1f !important;
+  padding: 76px 24px 96px !important;
+  box-sizing: border-box !important;
+}
+
+html.pm-dark-mode #pm-reader-overlay {
+  background: #111114 !important;
+  color: #e5e5ea !important;
+}
+
+#pm-reader-toolbar {
+  position: fixed !important;
+  top: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 12px !important;
+  border-radius: 999px !important;
+  background: rgba(28, 28, 32, 0.86) !important;
+  color: #f5f5f7 !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+}
+
+#pm-reader-toolbar button {
+  appearance: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-radius: 999px !important;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+#pm-reader-toolbar button:hover {
+  background: rgba(255, 159, 10, 0.35) !important;
+}
+
+#pm-reader-article {
+  max-width: 680px !important;
+  margin: 0 auto !important;
+  font-family: Georgia, "New York", "Times New Roman", serif !important;
+  font-size: var(--pm-reader-size, 19px) !important;
+  line-height: 1.78 !important;
+  word-wrap: break-word !important;
+}
+
+#pm-reader-article img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  margin: 18px 0 !important;
+}
