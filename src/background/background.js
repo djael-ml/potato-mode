@@ -18,6 +18,8 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
 
   // Ephemeral set of tabs reporting dirty/unsaved forms (refreshed by content script)
   const dirtyFormTabIds = new Set();
+  const STORAGE_CLIENT_ENV = 'pm_client_env';
+  let adaptiveTabDebounce = null;
 
   function iconPathForState(state) {
     return {
@@ -407,12 +409,32 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
 
     const report = scanner.evaluateScan(scanInput);
 
-    // Apply recommended settings immediately
     const toSave = {
       ...report.recommendedSettings,
-      lastScanReport: report
+      lastScanReport: report,
+      lastAutoSwitch: {
+        from: (await loadSettings()).activeProfile,
+        to: report.profileId,
+        toLabel: report.profileLabel,
+        reason: 'Scan manuel',
+        at: Date.now()
+      }
     };
     await api.storageSet(toSave);
+
+    // Cache client environment hints (battery/network/bench) for background auto-adaptive checks
+    await api.storageSet({
+      [STORAGE_CLIENT_ENV]: {
+        hardwareConcurrency: clientMetrics.hardwareConcurrency ?? null,
+        deviceMemoryGB: clientMetrics.deviceMemoryGB ?? null,
+        benchmarkMs: clientMetrics.benchmarkMs ?? null,
+        onBattery: clientMetrics.onBattery ?? null,
+        batteryLevel: clientMetrics.batteryLevel ?? null,
+        saveData: clientMetrics.saveData ?? null,
+        effectiveConnection: clientMetrics.effectiveConnection ?? null,
+        updatedAt: Date.now()
+      }
+    });
 
     const fullSettings = await loadSettings();
     await Promise.all([
@@ -421,6 +443,97 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
     ]);
 
     return report;
+  }
+
+  // ---------------- Real-Time Auto-Adaptive Mode ----------------
+
+  async function runAutoAdaptiveEvaluation(forceImmediate = false) {
+    const cfg = await loadSettings();
+    if (!cfg.enabled || !cfg.autoAdaptiveMode) {
+      return { switched: false, reason: 'disabled' };
+    }
+
+    const [cpuStats, tabs, memInfo, envWrap] = await Promise.all([
+      sampleRealCpuLoadPercent(),
+      api.tabsQuery({}),
+      api.getSystemMemory(),
+      api.storageGet(STORAGE_CLIENT_ENV)
+    ]);
+
+    const cachedEnv = (envWrap && envWrap[STORAGE_CLIENT_ENV]) || {};
+    const openTabsCount = tabs.length;
+    const discardedTabsCount = tabs.filter((t) => t.discarded).length;
+    const loadedTabsCount = openTabsCount - discardedTabsCount;
+
+    let ramTotalGB = null;
+    let ramAvailableGB = null;
+    let ramFreePercent = null;
+    let ramSource = null;
+
+    if (memInfo && typeof memInfo.capacity === 'number' && memInfo.capacity > 0) {
+      ramTotalGB = memInfo.capacity / (1024 ** 3);
+      ramAvailableGB = memInfo.availableCapacity / (1024 ** 3);
+      ramFreePercent = (memInfo.availableCapacity / memInfo.capacity) * 100;
+      ramSource = 'system.memory';
+    } else if (typeof cachedEnv.deviceMemoryGB === 'number') {
+      ramTotalGB = cachedEnv.deviceMemoryGB;
+      ramSource = 'deviceMemory';
+    }
+
+    const scanInput = {
+      cpuCores: cpuStats.cpuCores ?? cachedEnv.hardwareConcurrency ?? (typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : null),
+      cpuModel: cpuStats.cpuModel,
+      cpuLoadPercent: cpuStats.cpuLoadPercent,
+      ramTotalGB,
+      ramAvailableGB,
+      ramFreePercent,
+      ramSource,
+      benchmarkMs: cachedEnv.benchmarkMs ?? null,
+      openTabsCount,
+      loadedTabsCount,
+      discardedTabsCount,
+      onBattery: cachedEnv.onBattery ?? null,
+      batteryLevel: cachedEnv.batteryLevel ?? null,
+      saveData: cachedEnv.saveData ?? null,
+      effectiveConnection: cachedEnv.effectiveConnection ?? null
+    };
+
+    const report = scanner.evaluateScan(scanInput);
+    const lastAt = forceImmediate ? 0 : ((cfg.lastAutoSwitch && cfg.lastAutoSwitch.at) || 0);
+    const decision = scanner.decideAdaptiveTransition(cfg.activeProfile, report, lastAt, Date.now());
+
+    if (!decision.shouldSwitch) {
+      return { switched: false, reason: decision.reason, report };
+    }
+
+    await api.storageSet({
+      ...decision.recommendedSettings,
+      autoAdaptiveMode: true,
+      lastScanReport: report,
+      lastAutoSwitch: {
+        from: decision.fromProfileId,
+        to: decision.nextProfileId,
+        toLabel: decision.nextProfileLabel,
+        reason: decision.reason,
+        at: decision.timestamp
+      }
+    });
+
+    const updated = await loadSettings();
+    await Promise.all([
+      syncDnrRules(updated),
+      updateGlobalIconAndAllTabs(updated)
+    ]);
+
+    return { switched: true, decision, report };
+  }
+
+  function scheduleAdaptiveTabCheck() {
+    if (adaptiveTabDebounce) clearTimeout(adaptiveTabDebounce);
+    adaptiveTabDebounce = setTimeout(() => {
+      adaptiveTabDebounce = null;
+      runAutoAdaptiveEvaluation(false);
+    }, 3000);
   }
 
   // ---------------- Lifecycle & Event Listeners ----------------
@@ -479,6 +592,20 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
         handleAdaptiveScan(msg.clientMetrics || {})
           .then((report) => sendResponse({ ok: true, report }))
           .catch((err) => sendResponse({ ok: false, error: err.message }));
+        return true;
+      }
+
+      if (msg.action === 'triggerAutoAdaptive') {
+        runAutoAdaptiveEvaluation(true)
+          .then((result) => sendResponse({ ok: true, result }))
+          .catch((err) => sendResponse({ ok: false, error: err.message }));
+        return true;
+      }
+
+      if (msg.action === 'updateClientEnv' && msg.env) {
+        api.storageSet({
+          [STORAGE_CLIENT_ENV]: { ...msg.env, updatedAt: Date.now() }
+        }).then(() => sendResponse({ ok: true }));
         return true;
       }
 
@@ -557,13 +684,21 @@ if (typeof importScripts === 'function' && (!globalThis.PotatoMode || !globalThi
 
     rawApi.tabs.onRemoved.addListener((tabId) => {
       dirtyFormTabIds.delete(tabId);
+      scheduleAdaptiveTabCheck();
     });
+
+    if (rawApi.tabs.onCreated) {
+      rawApi.tabs.onCreated.addListener(() => {
+        scheduleAdaptiveTabCheck();
+      });
+    }
   }
 
   if (rawApi && rawApi.alarms && rawApi.alarms.onAlarm) {
     rawApi.alarms.onAlarm.addListener((alarm) => {
       if (alarm && alarm.name === ALARM_RAM_SWEEP) {
         runRamSweep(false);
+        runAutoAdaptiveEvaluation(false);
       }
     });
   }

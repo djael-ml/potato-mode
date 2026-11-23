@@ -1,14 +1,15 @@
-// Potato Mode v3.0 — Popup Controller (Apple Glassmorphism UI)
-// 100% real telemetry, zero fabricated scores, zero inline event handlers.
+// Potato Mode v3.1 — Minimalist Apple Glassmorphism Popup Controller
+// 100% real telemetry, real-time adaptive auto-switching, zero inline handlers.
 (function () {
   'use strict';
 
   const { api, defaults, perfScore } = globalThis.PotatoMode;
 
-  const CIRCUMFERENCE = 2 * Math.PI * 36; // r = 36 -> 226.19
+  const CIRCUMFERENCE = 2 * Math.PI * 49; // r = 49 -> 307.88
 
   const TOGGLE_KEYS = [
     'enabled',
+    'autoAdaptiveMode',
     'disableAnimations',
     'killGpuEffects',
     'noWillChange',
@@ -40,32 +41,30 @@
     return document.getElementById(id);
   }
 
-  function formatCompactNumber(n) {
+  function formatCompact(n) {
     if (typeof n !== 'number') return '—';
     if (n >= 10000) return `${(n / 1000).toFixed(0)}k`;
     if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
     return String(n);
   }
 
-  // ---------------- Real Client Hardware Signals + Micro-Benchmark ----------------
+  // ---------------- Real Hardware Signals & Micro-Benchmark ----------------
 
   function runRealMicroBenchmark() {
     return new Promise((resolve) => {
       const start = performance.now();
-      // Deterministic lightweight integer/float compute workload (~5–60ms depending on real CPU)
       let acc = 0;
       for (let i = 1; i <= 180000; i++) {
         acc += Math.sqrt(i) * Math.sin(i * 0.001);
       }
       const computeMs = performance.now() - start;
 
-      // Measure real 6-frame rAF jitter
       const stamps = [];
       let done = false;
       const guard = setTimeout(() => {
         if (!done) {
           done = true;
-          resolve({ benchmarkMs: computeMs, frameJitterMs: null, _checksum: acc });
+          resolve({ benchmarkMs: Number(computeMs.toFixed(1)), frameJitterMs: null, _c: acc });
         }
       }, 260);
 
@@ -76,15 +75,13 @@
           done = true;
           clearTimeout(guard);
           const deltas = [];
-          for (let i = 1; i < stamps.length; i++) {
-            deltas.push(stamps[i] - stamps[i - 1]);
-          }
+          for (let i = 1; i < stamps.length; i++) deltas.push(stamps[i] - stamps[i - 1]);
           const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
           const variance = deltas.reduce((s, d) => s + Math.pow(d - avg, 2), 0) / deltas.length;
           resolve({
             benchmarkMs: Number(computeMs.toFixed(1)),
             frameJitterMs: Number(Math.sqrt(variance).toFixed(2)),
-            _checksum: acc
+            _c: acc
           });
           return;
         }
@@ -94,8 +91,8 @@
     });
   }
 
-  async function collectClientHardwareSignals() {
-    const bench = await runRealMicroBenchmark();
+  async function collectClientEnv(withBenchmark = false) {
+    const bench = withBenchmark ? await runRealMicroBenchmark() : { benchmarkMs: null, frameJitterMs: null };
 
     let onBattery = null;
     let batteryLevel = null;
@@ -129,7 +126,7 @@
 
   // ---------------- Visual State & Rendering ----------------
 
-  function resolveCurrentPopupState() {
+  function resolvePopupVisualState() {
     const tab = liveTelemetry && liveTelemetry.activeTab;
     if (tab && tab.isRestricted) return 'error';
     if (!state.enabled) return 'inactive';
@@ -139,60 +136,68 @@
   }
 
   function renderHeaderAndSite() {
-    const visualState = resolveCurrentPopupState();
+    const visualState = resolvePopupVisualState();
     document.body.setAttribute('data-state', visualState);
+    $('brandIcon').src = `../icons/${visualState}-48.png`;
 
-    const iconEl = $('brandIcon');
-    if (iconEl) iconEl.src = `../icons/${visualState}-48.png`;
+    const badge = $('headerBadge');
+    const prof = defaults.PROFILES[state.activeProfile];
+    const profName = prof ? prof.label : 'Perso';
 
-    const profileObj = defaults.PROFILES[state.activeProfile];
-    const profileName = profileObj ? profileObj.label : 'Personnalisé';
+    if (visualState === 'inactive') badge.textContent = 'OFF';
+    else if (visualState === 'paused') badge.textContent = 'Pause';
+    else if (visualState === 'error') badge.textContent = 'Système';
+    else if (state.autoAdaptiveMode) badge.textContent = `Auto · ${profName}`;
+    else badge.textContent = profName;
 
-    const sub = $('statusSubtitle');
-    if (visualState === 'inactive') {
-      sub.textContent = 'Désactivé';
-    } else if (visualState === 'paused') {
-      sub.textContent = 'En pause sur ce site';
-    } else if (visualState === 'error') {
-      sub.textContent = 'Page système protégée';
-    } else if (visualState === 'extreme') {
-      sub.textContent = 'Actif · Patate Max';
+    // Adaptive status caption
+    const adaptiveSub = $('adaptiveStatus');
+    if (!state.enabled) {
+      adaptiveSub.textContent = 'Potato Mode désactivé';
+    } else if (state.autoAdaptiveMode) {
+      const sw = state.lastAutoSwitch;
+      if (sw && sw.reason && sw.to === state.activeProfile) {
+        adaptiveSub.textContent = `${profName} · ${sw.reason}`;
+      } else {
+        adaptiveSub.textContent = `Actif (${profName}) · s'ajuste en temps réel`;
+      }
     } else {
-      sub.textContent = `Actif · ${profileName}`;
+      adaptiveSub.textContent = `Profil manuel · ${profName}`;
     }
 
+    // Current site row
     const tab = liveTelemetry && liveTelemetry.activeTab;
     const led = $('siteLed');
     const hostEl = $('siteHost');
-    const siteBtn = $('toggleSiteBtn');
+    const btn = $('toggleSiteBtn');
 
     if (!tab || tab.isRestricted) {
-      led.className = 'status-led error';
-      hostEl.textContent = 'Page système du navigateur';
-      siteBtn.textContent = 'Protégée';
-      siteBtn.disabled = true;
-      siteBtn.classList.remove('is-paused');
+      led.className = 'site-dot error';
+      hostEl.textContent = 'Page système';
+      btn.textContent = 'Protégée';
+      btn.disabled = true;
+      btn.classList.remove('is-paused');
     } else {
       const excluded = defaults.isDomainWhitelisted(tab.hostname, state);
       hostEl.textContent = tab.hostname || 'Site actuel';
-      siteBtn.disabled = false;
+      btn.disabled = false;
       if (!state.enabled) {
-        led.className = 'status-led off';
-        siteBtn.textContent = excluded ? 'Exclu' : 'Exclure';
-        siteBtn.classList.toggle('is-paused', excluded);
+        led.className = 'site-dot off';
+        btn.textContent = excluded ? 'Exclu' : 'Exclure';
+        btn.classList.toggle('is-paused', excluded);
       } else if (excluded) {
-        led.className = 'status-led paused';
-        siteBtn.textContent = 'Réactiver';
-        siteBtn.classList.add('is-paused');
+        led.className = 'site-dot paused';
+        btn.textContent = 'Réactiver';
+        btn.classList.add('is-paused');
       } else {
-        led.className = 'status-led';
-        siteBtn.textContent = 'Exclure';
-        siteBtn.classList.remove('is-paused');
+        led.className = 'site-dot';
+        btn.textContent = 'Exclure';
+        btn.classList.remove('is-paused');
       }
     }
   }
 
-  function renderRealScoreAndMetrics() {
+  function renderScoreHero() {
     const arc = $('scoreArc');
     const numEl = $('scoreNum');
     const gradeEl = $('scoreGrade');
@@ -203,10 +208,7 @@
       return;
     }
 
-    const tab = liveTelemetry.activeTab;
-    const page = liveTelemetry.page;
-    const mem = liveTelemetry.memory;
-    const tabsInfo = liveTelemetry.tabs;
+    const { activeTab: tab, page, memory: mem, tabs: tabsInfo } = liveTelemetry;
 
     const scoreRes = perfScore.computeRealPerfScore({
       isRestricted: tab && tab.isRestricted,
@@ -226,94 +228,75 @@
       numEl.textContent = '—';
       gradeEl.textContent = scoreRes.grade;
       arc.style.strokeDashoffset = String(CIRCUMFERENCE);
-      arc.style.stroke = 'var(--text-tertiary)';
+      arc.style.stroke = 'var(--text-3)';
     } else {
       numEl.textContent = String(scoreRes.score);
       gradeEl.textContent = scoreRes.grade;
-      const offset = CIRCUMFERENCE * (1 - scoreRes.score / 100);
-      arc.style.strokeDashoffset = String(offset);
-
+      arc.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - scoreRes.score / 100));
       if (scoreRes.score >= 80) arc.style.stroke = 'var(--green)';
       else if (scoreRes.score >= 55) arc.style.stroke = 'var(--accent)';
       else arc.style.stroke = 'var(--red)';
     }
 
-    // Tile 1: Real FPS
-    $('metricFps').textContent = page && typeof page.fps === 'number' ? `${page.fps} FPS` : '—';
+    // Whisper-quiet real inline telemetry strip
+    $('metricFps').textContent = page && typeof page.fps === 'number' ? `${page.fps} FPS` : '— FPS';
 
-    // Tile 2: Real System RAM (Chrome) OR Real Loaded Tabs (Firefox) — never fabricated!
     if (mem && typeof mem.ramFreePercent === 'number') {
-      $('metricMemLabel').textContent = 'RAM libre';
-      $('metricMem').textContent = `${Math.round(mem.ramFreePercent)}% (${mem.ramAvailableGB.toFixed(1)} Go)`;
+      $('metricMem').textContent = `${Math.round(mem.ramFreePercent)}% RAM libre`;
     } else if (tabsInfo) {
-      $('metricMemLabel').textContent = 'Onglets RAM';
-      $('metricMem').textContent = `${tabsInfo.loadedTabsCount}/${tabsInfo.openTabsCount}`;
+      $('metricMem').textContent = `${tabsInfo.loadedTabsCount}/${tabsInfo.openTabsCount} onglets`;
     } else {
       $('metricMem').textContent = '—';
     }
 
-    // Tile 3: Real DOM node count
     $('metricDom').textContent = page && typeof page.domNodes === 'number'
-      ? `${formatCompactNumber(page.domNodes)} nœuds`
-      : '—';
-
-    // Tile 4: Real active protection counters (DNR rules + real actions)
-    const dnr = liveTelemetry.dnrRulesActive || 0;
-    const pausedVids = page && page.actions ? page.actions.videosPaused : 0;
-    const sleeping = tabsInfo ? tabsInfo.discardedTabsCount : 0;
-    const parts = [];
-    if (dnr > 0) parts.push(`${dnr} DNR`);
-    if (sleeping > 0) parts.push(`${sleeping} veille`);
-    else if (pausedVids > 0) parts.push(`${pausedVids} vid.`);
-    $('metricActions').textContent = parts.length > 0 ? parts.join(' · ') : (state.enabled ? 'Actif' : 'OFF');
+      ? `${formatCompact(page.domNodes)} DOM`
+      : '— DOM';
   }
 
-  function renderScanReport(report) {
-    const box = $('scanReport');
+  function renderScanDisclosure(report) {
+    const disc = $('scanDisclosure');
     if (!report || !report.detectedSpecs) {
-      box.hidden = true;
+      disc.hidden = true;
       return;
     }
 
-    const specsEl = $('scanSpecs');
-    const reasonsEl = $('scanReasons');
     const s = report.detectedSpecs;
+    const summaryParts = [];
+    if (typeof s.cpuCores === 'number') summaryParts.push(`${s.cpuCores} cœurs`);
+    if (typeof s.ramTotalGB === 'number') summaryParts.push(`${s.ramTotalGB} Go RAM`);
+    else if (typeof s.benchmarkMs === 'number') summaryParts.push(`Bench ${s.benchmarkMs} ms`);
+    summaryParts.push(`Profil ${report.profileLabel}`);
 
-    specsEl.textContent = '';
-    const chips = [];
-    if (typeof s.cpuCores === 'number') chips.push(`${s.cpuCores} cœurs`);
-    if (typeof s.cpuLoadPercent === 'number') chips.push(`CPU ${s.cpuLoadPercent}%`);
+    $('scanSummaryLine').textContent = summaryParts.join(' · ');
+
+    const fullSpecs = [];
+    if (typeof s.cpuCores === 'number') fullSpecs.push(`${s.cpuCores} cœurs`);
+    if (typeof s.cpuLoadPercent === 'number') fullSpecs.push(`CPU ${s.cpuLoadPercent}%`);
     if (typeof s.ramTotalGB === 'number') {
-      chips.push(
+      fullSpecs.push(
         typeof s.ramFreePercent === 'number'
           ? `${s.ramTotalGB} Go RAM (${s.ramFreePercent}% libre)`
           : `~${s.ramTotalGB} Go RAM`
       );
     }
-    if (typeof s.benchmarkMs === 'number') chips.push(`Bench ${s.benchmarkMs} ms`);
-    if (typeof s.loadedTabsCount === 'number') chips.push(`${s.loadedTabsCount} onglets RAM`);
-    if (s.onBattery === true && typeof s.batteryLevel === 'number') chips.push(`Batterie ${s.batteryLevel}%`);
-    if (s.effectiveConnection) chips.push(`Réseau ${s.effectiveConnection}`);
-    chips.push(`Profil ${report.profileLabel}`);
+    if (typeof s.benchmarkMs === 'number') fullSpecs.push(`Bench ${s.benchmarkMs} ms`);
+    if (typeof s.loadedTabsCount === 'number') fullSpecs.push(`${s.loadedTabsCount} onglets RAM`);
+    if (s.onBattery === true && typeof s.batteryLevel === 'number') fullSpecs.push(`Batterie ${s.batteryLevel}%`);
+    $('scanSpecs').textContent = fullSpecs.join(' · ');
 
-    for (const label of chips) {
-      const span = document.createElement('span');
-      span.className = 'spec-chip';
-      span.textContent = label;
-      specsEl.appendChild(span);
-    }
-
+    const reasonsEl = $('scanReasons');
     reasonsEl.textContent = '';
-    for (const reason of report.reasons || []) {
+    for (const r of report.reasons || []) {
       const li = document.createElement('li');
-      li.textContent = reason;
+      li.textContent = r;
       reasonsEl.appendChild(li);
     }
 
-    box.hidden = false;
+    disc.hidden = false;
   }
 
-  function renderRamPanel() {
+  function renderRamView() {
     const tabsInfo = liveTelemetry && liveTelemetry.tabs;
     $('ramLoadedCount').textContent = tabsInfo ? String(tabsInfo.loadedTabsCount) : '—';
     $('ramSleepingCount').textContent = tabsInfo ? String(tabsInfo.discardedTabsCount) : '—';
@@ -333,15 +316,13 @@
       return;
     }
 
-    // Show loaded background tabs first, up to 8 items for a clean compact UI
-    const sorted = [...tabsInfo.list].sort((a, b) => Number(a.discarded) - Number(b.discarded)).slice(0, 8);
-
+    const sorted = [...tabsInfo.list].sort((a, b) => Number(a.discarded) - Number(b.discarded)).slice(0, 10);
     for (const t of sorted) {
       const row = document.createElement('div');
       row.className = 'bg-tab-row';
 
-      const info = document.createElement('div');
-      info.className = 'bg-tab-info';
+      const copy = document.createElement('div');
+      copy.className = 'bg-tab-copy';
 
       const title = document.createElement('span');
       title.className = 'bg-tab-title';
@@ -351,32 +332,29 @@
       host.className = 'bg-tab-host';
       host.textContent = t.hostname;
 
-      info.append(title, host);
-      row.appendChild(info);
+      copy.append(title, host);
+      row.appendChild(copy);
 
       if (t.discarded) {
-        const badge = document.createElement('span');
-        badge.className = 'tab-badge';
-        badge.textContent = 'En veille';
-        row.appendChild(badge);
+        const tag = document.createElement('span');
+        tag.className = 'tab-tag';
+        tag.textContent = 'En veille';
+        row.appendChild(tag);
       } else if (t.pinned || t.audible) {
-        const badge = document.createElement('span');
-        badge.className = 'tab-badge';
-        badge.textContent = t.audible ? 'Audio' : 'Épinglé';
-        row.appendChild(badge);
+        const tag = document.createElement('span');
+        tag.className = 'tab-tag';
+        tag.textContent = t.audible ? 'Audio' : 'Épinglé';
+        row.appendChild(tag);
       } else {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'pill-btn';
+        btn.className = 'ghost-pill';
         btn.textContent = 'Veille';
         btn.addEventListener('click', async () => {
           btn.disabled = true;
           const res = await api.runtimeSendMessage({ action: 'discardSingleTab', tabId: t.id });
-          if (res && res.ok) {
-            await refreshTelemetry();
-          } else {
-            btn.disabled = false;
-          }
+          if (res && res.ok) await refreshTelemetry();
+          else btn.disabled = false;
         });
         row.appendChild(btn);
       }
@@ -388,47 +366,35 @@
   function renderControls() {
     for (const key of TOGGLE_KEYS) {
       const el = $(key);
-      if (el && el.type === 'checkbox') {
-        el.checked = !!state[key];
-      }
-      if (key !== 'enabled') {
+      if (el && el.type === 'checkbox') el.checked = !!state[key];
+      if (key !== 'enabled' && key !== 'autoAdaptiveMode') {
         const row = $('item-' + key);
-        if (row) {
-          row.classList.toggle('disabled-item', !state.enabled);
-        }
+        if (row) row.classList.toggle('disabled-item', !state.enabled);
       }
     }
 
-    document.querySelectorAll('.profile-chip').forEach((btn) => {
+    document.querySelectorAll('.prof-btn').forEach((btn) => {
       btn.classList.toggle('active', state.enabled && btn.dataset.profile === state.activeProfile);
     });
 
     const wl = $('whitelistDomains');
-    if (wl && document.activeElement !== wl) {
-      wl.value = state.whitelistDomains || '';
-    }
+    if (wl && document.activeElement !== wl) wl.value = state.whitelistDomains || '';
 
     const cssEl = $('customCSSCode');
-    if (cssEl && document.activeElement !== cssEl) {
-      cssEl.value = state.customCSSCode || '';
-    }
-    const cssBox = $('customCSSBox');
-    if (cssBox) cssBox.hidden = !state.customCSS;
+    if (cssEl && document.activeElement !== cssEl) cssEl.value = state.customCSSCode || '';
   }
 
   function renderAll() {
     renderHeaderAndSite();
     renderControls();
-    renderRealScoreAndMetrics();
-    renderRamPanel();
-    renderScanReport(state.lastScanReport);
+    renderScoreHero();
+    renderRamView();
+    renderScanDisclosure(state.lastScanReport);
   }
 
   async function refreshTelemetry() {
     const res = await api.runtimeSendMessage({ action: 'getLiveTelemetry' });
-    if (res && res.ok && res.data) {
-      liveTelemetry = res.data;
-    }
+    if (res && res.ok && res.data) liveTelemetry = res.data;
     const fresh = await api.storageGet(defaults.SETTINGS_KEYS);
     state = { ...defaults.DEFAULTS, ...fresh };
     renderAll();
@@ -438,52 +404,62 @@
     Object.assign(state, patch);
     await api.storageSet(patch);
     renderAll();
-    // Refresh live telemetry briefly after settings change so DNR/score reflects reality
     setTimeout(refreshTelemetry, 180);
   }
 
   // ---------------- Event Wiring ----------------
 
   function wireEvents() {
-    // Segmented tabs
-    document.querySelectorAll('.seg-btn').forEach((btn) => {
+    // Top 3-view navigation
+    document.querySelectorAll('.nav-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-        document.querySelectorAll('.seg-btn').forEach((b) => {
+        document.querySelectorAll('.nav-btn').forEach((b) => {
           const isAct = b === btn;
           b.classList.toggle('active', isAct);
           b.setAttribute('aria-selected', String(isAct));
         });
-        document.querySelectorAll('.tab-panel').forEach((panel) => {
-          const match = panel.id === `panel-${target}`;
-          panel.hidden = !match;
-          panel.classList.toggle('active', match);
+        document.querySelectorAll('.view').forEach((v) => {
+          const match = v.id === `view-${target}`;
+          v.hidden = !match;
+          v.classList.toggle('active', match);
         });
       });
     });
 
-    // Toggles
+    // Switches
     for (const key of TOGGLE_KEYS) {
       const el = $(key);
       if (!el) continue;
-      el.addEventListener('change', (e) => {
-        const patch = { [key]: e.target.checked };
-        if (key === 'blockWebFonts' && e.target.checked) {
-          patch.systemFonts = true;
+      el.addEventListener('change', async (e) => {
+        const checked = e.target.checked;
+        if (key === 'autoAdaptiveMode') {
+          await savePartial({ autoAdaptiveMode: checked });
+          if (checked && state.enabled) {
+            const env = await collectClientEnv(false);
+            await api.runtimeSendMessage({ action: 'updateClientEnv', env });
+            await api.runtimeSendMessage({ action: 'triggerAutoAdaptive' });
+            await refreshTelemetry();
+          }
+          return;
         }
+
+        const patch = { [key]: checked };
+        if (key === 'blockWebFonts' && checked) patch.systemFonts = true;
         if (key !== 'enabled' && key !== 'whitelist' && key !== 'customCSS' && key !== 'ramProtectForms') {
           patch.activeProfile = 'custom';
+          patch.autoAdaptiveMode = false;
         }
         savePartial(patch);
       });
     }
 
-    // Quick profile pills
-    document.querySelectorAll('.profile-chip').forEach((btn) => {
+    // Manual profile selection pauses Auto Adaptive cleanly
+    document.querySelectorAll('.prof-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const profile = defaults.PROFILES[btn.dataset.profile];
         if (!profile) return;
-        savePartial({ ...profile.settings, enabled: true });
+        savePartial({ ...profile.settings, enabled: true, autoAdaptiveMode: false });
       });
     });
 
@@ -491,10 +467,7 @@
     $('toggleSiteBtn').addEventListener('click', async () => {
       const tab = liveTelemetry && liveTelemetry.activeTab;
       if (!tab || tab.isRestricted || !tab.hostname) return;
-      const res = await api.runtimeSendMessage({
-        action: 'toggleCurrentSite',
-        hostname: tab.hostname
-      });
+      const res = await api.runtimeSendMessage({ action: 'toggleCurrentSite', hostname: tab.hostname });
       if (res && res.ok) {
         state.whitelist = true;
         state.whitelistDomains = res.whitelistDomains;
@@ -503,57 +476,49 @@
       }
     });
 
-    // Big Heroic Adaptive Scan Button
+    // Adaptive PC Scan button
     $('scanBtn').addEventListener('click', async () => {
       const btn = $('scanBtn');
-      const title = $('scanBtnTitle');
-      const sub = $('scanBtnSub');
-
+      const txt = $('scanBtnText');
       btn.disabled = true;
       btn.classList.add('scanning');
-      title.textContent = 'Analyse du PC en cours…';
-      sub.textContent = 'Mesure réelle CPU, RAM, onglets & réactivité';
+      txt.textContent = 'Analyse du PC…';
 
       try {
-        const clientMetrics = await collectClientHardwareSignals();
-        const res = await api.runtimeSendMessage({
-          action: 'runAdaptiveScan',
-          clientMetrics
-        });
-
+        const clientMetrics = await collectClientEnv(true);
+        const res = await api.runtimeSendMessage({ action: 'runAdaptiveScan', clientMetrics });
         if (res && res.ok && res.report) {
-          Object.assign(state, res.report.recommendedSettings, { lastScanReport: res.report });
-          title.textContent = `Profil ${res.report.profileLabel} appliqué`;
-          sub.textContent = res.report.tagline;
+          Object.assign(state, res.report.recommendedSettings, {
+            lastScanReport: res.report,
+            autoAdaptiveMode: true
+          });
+          await api.storageSet({ autoAdaptiveMode: true });
+          txt.textContent = `Profil ${res.report.profileLabel} appliqué`;
           await refreshTelemetry();
         } else {
-          title.textContent = 'Scanner & Adapter mon PC';
-          sub.textContent = 'Impossible de terminer le scan';
+          txt.textContent = 'Scanner mon PC';
         }
       } finally {
         btn.disabled = false;
         btn.classList.remove('scanning');
-        setTimeout(() => {
-          title.textContent = 'Scanner & Adapter mon PC';
-          sub.textContent = 'Calibre automatiquement CPU, RAM & réseau';
-        }, 2800);
+        setTimeout(() => { txt.textContent = 'Scanner mon PC'; }, 2400);
       }
     });
 
     // RAM controls
     $('ramIdleMinutes').addEventListener('change', (e) => {
-      savePartial({ ramIdleMinutes: Number(e.target.value), activeProfile: 'custom' });
+      savePartial({ ramIdleMinutes: Number(e.target.value), activeProfile: 'custom', autoAdaptiveMode: false });
     });
 
     $('ramMaxActiveTabs').addEventListener('change', (e) => {
-      savePartial({ ramMaxActiveTabs: Number(e.target.value), activeProfile: 'custom' });
+      savePartial({ ramMaxActiveTabs: Number(e.target.value), activeProfile: 'custom', autoAdaptiveMode: false });
     });
 
     $('discardNowBtn').addEventListener('click', async () => {
       const btn = $('discardNowBtn');
       const fb = $('ramFeedback');
       btn.disabled = true;
-      btn.textContent = 'Mise en veille en cours…';
+      btn.textContent = 'Mise en veille…';
 
       const res = await api.runtimeSendMessage({ action: 'discardNow' });
       btn.disabled = false;
@@ -565,7 +530,7 @@
         if (discardedCount === 0) {
           fb.textContent = 'Tous les onglets éligibles sont déjà en veille.';
         } else if (typeof freedMB === 'number' && freedMB > 0) {
-          fb.textContent = `${discardedCount} onglet(s) mis en veille · ~${freedMB} Mo libérés`;
+          fb.textContent = `${discardedCount} onglet(s) en veille · ~${freedMB} Mo libérés`;
         } else {
           fb.textContent = `${discardedCount} onglet(s) mis en veille`;
         }
@@ -577,24 +542,20 @@
     let wlTimer;
     $('whitelistDomains').addEventListener('input', (e) => {
       clearTimeout(wlTimer);
-      wlTimer = setTimeout(() => {
-        savePartial({ whitelistDomains: e.target.value });
-      }, 350);
+      wlTimer = setTimeout(() => savePartial({ whitelistDomains: e.target.value }), 350);
     });
 
     let cssTimer;
     $('customCSSCode').addEventListener('input', (e) => {
       clearTimeout(cssTimer);
-      cssTimer = setTimeout(() => {
-        savePartial({ customCSSCode: e.target.value });
-      }, 350);
+      cssTimer = setTimeout(() => savePartial({ customCSSCode: e.target.value }), 350);
     });
 
     // Export / Import / Reset
     $('exportBtn').addEventListener('click', () => {
       const payload = {};
       for (const k of defaults.SETTINGS_KEYS) {
-        if (k !== 'lastScanReport') payload[k] = state[k];
+        if (k !== 'lastScanReport' && k !== 'lastAutoSwitch') payload[k] = state[k];
       }
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -605,10 +566,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
 
-    $('importBtn').addEventListener('click', () => {
-      $('importFile').click();
-    });
-
+    $('importBtn').addEventListener('click', () => $('importFile').click());
     $('importFile').addEventListener('change', (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -618,7 +576,7 @@
           const parsed = JSON.parse(String(reader.result));
           const safe = {};
           for (const k of defaults.SETTINGS_KEYS) {
-            if (parsed[k] !== undefined && k !== 'lastScanReport') {
+            if (parsed[k] !== undefined && k !== 'lastScanReport' && k !== 'lastAutoSwitch') {
               safe[k] = parsed[k];
             }
           }
@@ -629,9 +587,7 @@
       e.target.value = '';
     });
 
-    $('resetBtn').addEventListener('click', () => {
-      savePartial({ ...defaults.DEFAULTS });
-    });
+    $('resetBtn').addEventListener('click', () => savePartial({ ...defaults.DEFAULTS }));
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -639,6 +595,12 @@
     const stored = await api.storageGet(defaults.SETTINGS_KEYS);
     state = { ...defaults.DEFAULTS, ...stored };
     renderAll();
+
+    // Silently share latest battery/network hints with background for auto-adaptive mode
+    collectClientEnv(false).then((env) => {
+      api.runtimeSendMessage({ action: 'updateClientEnv', env });
+    });
+
     await refreshTelemetry();
   });
 })();

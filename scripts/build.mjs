@@ -67,7 +67,8 @@ export function buildAll() {
   }
 
   const elapsed = Date.now() - start;
-  console.log(`Built Chrome & Firefox unpacked v3.0.0 (${icons.length} icon assets) in ${elapsed}ms -> releases/unpacked/`);
+  const version = JSON.parse(fs.readFileSync(TARGETS[0].manifest, 'utf8')).version;
+  console.log(`Built Chrome & Firefox unpacked v${version} (${icons.length} icon assets) in ${elapsed}ms -> releases/unpacked/`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

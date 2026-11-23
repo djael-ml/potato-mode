@@ -10,6 +10,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const RELEASES = path.join(ROOT, 'releases');
 
+const PKG_VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+
 const BUILDS = [
   { name: 'chrome', dir: path.join(RELEASES, 'unpacked', 'chrome') },
   { name: 'firefox', dir: path.join(RELEASES, 'unpacked', 'firefox') }
@@ -64,7 +66,7 @@ describe('MV3 Build Validation (Chrome & Firefox Parity)', () => {
 
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
       assert.equal(manifest.manifest_version, 3);
-      assert.equal(manifest.version, '3.0.0');
+      assert.equal(manifest.version, PKG_VERSION);
       assert.ok(manifest.permissions.includes('declarativeNetRequest'));
       assert.ok(manifest.permissions.includes('alarms'));
       assert.ok(manifest.permissions.includes('tabs'));
@@ -137,7 +139,7 @@ describe('MV3 Build Validation (Chrome & Firefox Parity)', () => {
 
 describe('Packed & ZIP Release Artifacts', () => {
   it('produces valid POSIX ZIP archives for Chrome & Firefox (zero backslashes)', () => {
-    for (const rel of ['zip/potato-mode-chrome-v3.0.0.zip', 'zip/potato-mode-firefox-v3.0.0.zip']) {
+    for (const rel of [`zip/potato-mode-chrome-v${PKG_VERSION}.zip`, `zip/potato-mode-firefox-v${PKG_VERSION}.zip`]) {
       const fullPath = path.join(RELEASES, rel);
       assert.ok(fs.existsSync(fullPath), `Missing ZIP: ${rel}`);
       const names = readZipEntryNames(fs.readFileSync(fullPath));
@@ -148,12 +150,12 @@ describe('Packed & ZIP Release Artifacts', () => {
   });
 
   it('produces valid Firefox .xpi and Chrome CRX3 .crx packed extensions', () => {
-    const xpiPath = path.join(RELEASES, 'packed', 'potato-mode-firefox-v3.0.0.xpi');
+    const xpiPath = path.join(RELEASES, 'packed', `potato-mode-firefox-v${PKG_VERSION}.xpi`);
     assert.ok(fs.existsSync(xpiPath), 'Missing Firefox .xpi');
     const xpiNames = readZipEntryNames(fs.readFileSync(xpiPath));
     assert.ok(xpiNames.includes('manifest.json'));
 
-    const crxPath = path.join(RELEASES, 'packed', 'potato-mode-chrome-v3.0.0.crx');
+    const crxPath = path.join(RELEASES, 'packed', `potato-mode-chrome-v${PKG_VERSION}.crx`);
     assert.ok(fs.existsSync(crxPath), 'Missing Chrome .crx');
     const crx = fs.readFileSync(crxPath);
     assert.equal(crx.subarray(0, 4).toString('ascii'), 'Cr24', 'CRX3 magic must be Cr24');

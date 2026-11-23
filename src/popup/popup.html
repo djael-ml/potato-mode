@@ -10,301 +10,338 @@
   <div class="ambient-glow" aria-hidden="true"></div>
 
   <div class="app-shell">
-    <!-- HEADER -->
-    <header class="glass-header">
+    <!-- MINIMAL HEADER -->
+    <header class="topbar">
       <div class="brand">
-        <img id="brandIcon" class="brand-icon" src="../icons/active-48.png" width="32" height="32" alt="Potato Mode">
-        <div class="brand-copy">
-          <h1 class="brand-title">Potato Mode</h1>
-          <span class="brand-sub" id="statusSubtitle">Actif · Équilibré</span>
-        </div>
+        <img id="brandIcon" class="brand-icon" src="../icons/active-48.png" width="28" height="28" alt="Potato Mode">
+        <span class="brand-title">Potato Mode</span>
+        <span class="state-pill" id="headerBadge">Auto</span>
       </div>
 
-      <label class="ios-switch master-switch" aria-label="Activer ou désactiver Potato Mode">
+      <label class="ios-switch" aria-label="Activer ou désactiver Potato Mode">
         <input type="checkbox" id="enabled">
         <span class="ios-track"><span class="ios-thumb"></span></span>
       </label>
     </header>
 
-    <!-- CURRENT SITE QUICK PILL -->
-    <section class="site-pill glass-card" id="sitePill">
-      <div class="site-meta">
-        <span class="status-led" id="siteLed"></span>
-        <span class="site-host" id="siteHost">Chargement…</span>
-      </div>
-      <button type="button" class="pill-btn" id="toggleSiteBtn">Exclure</button>
-    </section>
-
-    <!-- HERO: REAL LIVE SCORE + BIG ADAPTIVE SCAN BUTTON -->
-    <section class="hero-card glass-card">
-      <div class="score-row">
-        <div class="gauge-wrap" title="Score calculé uniquement à partir des métriques réelles de cette page et du navigateur">
-          <svg class="gauge-svg" viewBox="0 0 88 88" width="84" height="84" aria-hidden="true">
-            <circle class="gauge-bg" cx="44" cy="44" r="36"></circle>
-            <circle class="gauge-arc" id="scoreArc" cx="44" cy="44" r="36"></circle>
-          </svg>
-          <div class="gauge-center">
-            <span class="gauge-num" id="scoreNum">—</span>
-            <span class="gauge-grade" id="scoreGrade">Mesure…</span>
-          </div>
-        </div>
-
-        <div class="metrics-grid">
-          <div class="metric-tile">
-            <span class="metric-label">Fluidité</span>
-            <span class="metric-val" id="metricFps">—</span>
-          </div>
-          <div class="metric-tile">
-            <span class="metric-label" id="metricMemLabel">RAM libre</span>
-            <span class="metric-val" id="metricMem">—</span>
-          </div>
-          <div class="metric-tile">
-            <span class="metric-label">Poids DOM</span>
-            <span class="metric-val" id="metricDom">—</span>
-          </div>
-          <div class="metric-tile">
-            <span class="metric-label">Protection</span>
-            <span class="metric-val" id="metricActions">—</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- BIG HEROIC ADAPTIVE SCAN BUTTON -->
-      <button type="button" class="scan-btn" id="scanBtn">
-        <span class="scan-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a9 9 0 1 0 9 9"/>
-            <path d="M12 7v5l3 2"/>
-            <path d="M17 3h4v4"/>
-            <path d="M21 3l-5 5"/>
-          </svg>
-        </span>
-        <span class="scan-text-group">
-          <span class="scan-title" id="scanBtnTitle">Scanner &amp; Adapter mon PC</span>
-          <span class="scan-sub" id="scanBtnSub">Calibre automatiquement CPU, RAM &amp; réseau</span>
-        </span>
-      </button>
-
-      <!-- REAL DIAGNOSTIC REPORT (SHOWN AFTER SCAN) -->
-      <div class="scan-report" id="scanReport" hidden>
-        <div class="scan-specs" id="scanSpecs"></div>
-        <ul class="scan-reasons" id="scanReasons"></ul>
-      </div>
-
-      <!-- QUICK PROFILE PILLS -->
-      <div class="profile-bar" role="group" aria-label="Profils rapides">
-        <button type="button" class="profile-chip" data-profile="light">Léger</button>
-        <button type="button" class="profile-chip" data-profile="balanced">Équilibré</button>
-        <button type="button" class="profile-chip" data-profile="eco">Éco</button>
-        <button type="button" class="profile-chip" data-profile="extreme">Patate Max</button>
-      </div>
-    </section>
-
-    <!-- APPLE SEGMENTED NAVIGATION -->
-    <nav class="segmented-control" role="tablist" aria-label="Sections">
-      <button type="button" class="seg-btn active" role="tab" aria-selected="true" data-tab="opti">Opti</button>
-      <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tab="ram">RAM</button>
-      <button type="button" class="seg-btn" role="tab" aria-selected="false" data-tab="advanced">Avancé</button>
+    <!-- SLEEK 3-VIEW SEGMENTED NAV -->
+    <nav class="nav-segment" role="tablist" aria-label="Navigation">
+      <button type="button" class="nav-btn active" role="tab" aria-selected="true" data-tab="home">Accueil</button>
+      <button type="button" class="nav-btn" role="tab" aria-selected="false" data-tab="settings">Réglages</button>
+      <button type="button" class="nav-btn" role="tab" aria-selected="false" data-tab="ram">RAM</button>
     </nav>
 
-    <!-- SCROLLABLE PANELS -->
-    <main class="panels-scroll" id="panelsRoot">
+    <!-- MAIN CONTENT AREA -->
+    <main class="viewport">
 
-      <!-- TAB 1: OPTIMISATIONS -->
-      <section class="tab-panel active" id="panel-opti" role="tabpanel">
-        <div class="group-label">Performance &amp; GPU</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-disableAnimations">
-            <div class="row-copy">
-              <span class="row-title">Animations fluides (Safe)</span>
-              <span class="row-desc">Termine les transitions en 0 ms sans casser les SPA</span>
+      <!-- VIEW 1: ACCUEIL (ULTRA-ÉPURÉ, SANS SCROLL) -->
+      <section class="view active" id="view-home" role="tabpanel">
+        <!-- Calm centerpiece real score ring -->
+        <div class="score-hero">
+          <div class="ring-wrap" title="Score calculé en temps réel à partir des métriques mesurées sur cette page">
+            <svg class="ring-svg" viewBox="0 0 116 116" width="112" height="112" aria-hidden="true">
+              <circle class="ring-track" cx="58" cy="58" r="49"></circle>
+              <circle class="ring-fill" id="scoreArc" cx="58" cy="58" r="49"></circle>
+            </svg>
+            <div class="ring-center">
+              <span class="ring-value" id="scoreNum">—</span>
+              <span class="ring-label" id="scoreGrade">Mesure…</span>
             </div>
-            <label class="ios-switch"><input type="checkbox" id="disableAnimations"><span class="ios-track"><span class="ios-thumb"></span></span></label>
           </div>
 
-          <div class="row-item" id="item-killGpuEffects">
-            <div class="row-copy">
-              <span class="row-title">Couper effets GPU lourds</span>
-              <span class="row-desc">Supprime backdrop-filter, blur et blend-modes</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="killGpuEffects"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-noWillChange">
-            <div class="row-copy">
-              <span class="row-title">Nettoyer will-change</span>
-              <span class="row-desc">Libère les couches VRAM composites inutiles</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="noWillChange"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-contentVisibility">
-            <div class="row-copy">
-              <span class="row-title">Rendu hors-écran différé</span>
-              <span class="row-desc">content-visibility: auto sur les blocs longs</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="contentVisibility"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-lazyLoadAll">
-            <div class="row-copy">
-              <span class="row-title">Lazy-load forcé</span>
-              <span class="row-desc">Images &amp; iframes chargées à l'approche</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="lazyLoadAll"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-removeUIEffects">
-            <div class="row-copy">
-              <span class="row-title">Design plat minimal</span>
-              <span class="row-desc">Supprime ombres portées et arrondis coûteux</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="removeUIEffects"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          <div class="live-strip" aria-label="Télémétrie en direct">
+            <span id="metricFps">— FPS</span>
+            <span class="dot">·</span>
+            <span id="metricMem">—</span>
+            <span class="dot">·</span>
+            <span id="metricDom">— DOM</span>
           </div>
         </div>
 
-        <div class="group-label">Médias &amp; Réseau</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-pauseVideos">
+        <!-- Unified Adaptive Mode & Profile Glass Card -->
+        <div class="glass-card mode-card">
+          <div class="adaptive-row">
             <div class="row-copy">
-              <span class="row-title">Bloquer autoplay vidéo</span>
-              <span class="row-desc">Pause auto &amp; onglets masqués (lecture manuelle intacte)</span>
+              <span class="row-title">Mode adaptatif</span>
+              <span class="row-sub" id="adaptiveStatus">Ajuste le profil selon CPU, RAM &amp; onglets</span>
             </div>
-            <label class="ios-switch"><input type="checkbox" id="pauseVideos"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+            <label class="ios-switch small" aria-label="Activer le mode adaptatif automatique">
+              <input type="checkbox" id="autoAdaptiveMode">
+              <span class="ios-track"><span class="ios-thumb"></span></span>
+            </label>
           </div>
 
-          <div class="row-item" id="item-blockGifs">
-            <div class="row-copy">
-              <span class="row-title">Bloquer les GIFs <span class="micro-tag">DNR</span></span>
-              <span class="row-desc">Bloque les .gif avant téléchargement réseau</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="blockGifs"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          <div class="profile-segment" role="group" aria-label="Profils">
+            <button type="button" class="prof-btn" data-profile="light">Léger</button>
+            <button type="button" class="prof-btn" data-profile="balanced">Équilibré</button>
+            <button type="button" class="prof-btn" data-profile="eco">Éco</button>
+            <button type="button" class="prof-btn" data-profile="extreme">Max</button>
           </div>
 
-          <div class="row-item" id="item-blockWebFonts">
-            <div class="row-copy">
-              <span class="row-title">Bloquer WebFonts <span class="micro-tag">DNR</span></span>
-              <span class="row-desc">Évite les téléchargements de polices tierces</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="blockWebFonts"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
+          <div class="hairline"></div>
 
-          <div class="row-item" id="item-blockImages">
-            <div class="row-copy">
-              <span class="row-title">Bloquer les images <span class="micro-tag">DNR</span></span>
-              <span class="row-desc">0 octet image transféré (conserve tout le texte)</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="blockImages"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
+          <button type="button" class="scan-pill-btn" id="scanBtn">
+            <svg class="scan-glyph" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a9 9 0 1 0 9 9"/>
+              <path d="M12 7v5l3 2"/>
+              <path d="M17 3h4v4"/>
+              <path d="M21 3l-5 5"/>
+            </svg>
+            <span id="scanBtnText">Scanner mon PC</span>
+          </button>
 
-          <div class="row-item" id="item-blockHeavyMedia">
-            <div class="row-copy">
-              <span class="row-title">Bloquer flux média <span class="micro-tag">DNR</span></span>
-              <span class="row-desc">Stoppe les préchargements audio/vidéo lourds</span>
+          <details class="scan-disclosure" id="scanDisclosure" hidden>
+            <summary id="scanSummaryLine">Diagnostic prêt</summary>
+            <div class="scan-details-body">
+              <div class="specs-line" id="scanSpecs"></div>
+              <ul class="reasons-list" id="scanReasons"></ul>
             </div>
-            <label class="ios-switch"><input type="checkbox" id="blockHeavyMedia"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-blockIframes">
-            <div class="row-copy">
-              <span class="row-title">Masquer les iframes</span>
-              <span class="row-desc">Cache les lecteurs embarqués et widgets tiers</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="blockIframes"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-grayscaleMedia">
-            <div class="row-copy">
-              <span class="row-title">Médias Noir &amp; Blanc</span>
-              <span class="row-desc">Filtre monochrome discret pour la concentration</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="grayscaleMedia"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
+          </details>
         </div>
 
-        <div class="group-label">Interface &amp; Confort</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-noPopups">
-            <div class="row-copy">
-              <span class="row-title">Anti-bannières cookies</span>
-              <span class="row-desc">Masquage chirurgical CMP (OneTrust, Didomi…)</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="noPopups"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+        <!-- Quiet Current Site Row -->
+        <div class="glass-card site-row">
+          <div class="site-left">
+            <span class="site-dot" id="siteLed"></span>
+            <span class="site-host" id="siteHost">Chargement…</span>
           </div>
-
-          <div class="row-item" id="item-darkMode">
-            <div class="row-copy">
-              <span class="row-title">Mode sombre adaptatif</span>
-              <span class="row-desc">Thème sombre lisible avec surfaces opaques</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="darkMode"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-systemFonts">
-            <div class="row-copy">
-              <span class="row-title">Polices système</span>
-              <span class="row-desc">Rendu natif ultra-rapide (SF Pro / Segoe UI)</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="systemFonts"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-noSticky">
-            <div class="row-copy">
-              <span class="row-title">Libérer barres sticky</span>
-              <span class="row-desc">Détache les en-têtes figés (réversible)</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="noSticky"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-
-          <div class="row-item" id="item-readerMode">
-            <div class="row-copy">
-              <span class="row-title">Mode lecture épuré</span>
-              <span class="row-desc">Vue article centrée avec barre de contrôle</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="readerMode"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
+          <button type="button" class="ghost-pill" id="toggleSiteBtn">Exclure</button>
         </div>
       </section>
 
-      <!-- TAB 2: RAM LIMITER -->
-      <section class="tab-panel" id="panel-ram" role="tabpanel" hidden>
-        <div class="glass-card ram-summary-card">
-          <div class="ram-stats-row">
-            <div class="ram-stat">
-              <span class="ram-stat-num" id="ramLoadedCount">—</span>
-              <span class="ram-stat-lbl">Onglets en RAM</span>
+      <!-- VIEW 2: RÉGLAGES (AIRY iOS SETTINGS GROUPS) -->
+      <section class="view scrollable" id="view-settings" role="tabpanel" hidden>
+        <div class="section-caption">Essentiels</div>
+        <div class="glass-group">
+          <div class="setting-row" id="item-disableAnimations">
+            <div class="row-copy">
+              <span class="row-title">Animations fluides</span>
+              <span class="row-sub">Instantanées sans casser les sites SPA</span>
             </div>
-            <div class="ram-stat">
-              <span class="ram-stat-num" id="ramSleepingCount">—</span>
-              <span class="ram-stat-lbl">En veille</span>
+            <label class="ios-switch small"><input type="checkbox" id="disableAnimations"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-killGpuEffects">
+            <div class="row-copy">
+              <span class="row-title">Effets GPU légers</span>
+              <span class="row-sub">Coupe les flous backdrop-filter coûteux</span>
             </div>
-            <div class="ram-stat">
-              <span class="ram-stat-num" id="ramTotalSaved">0</span>
-              <span class="ram-stat-lbl">Total suspendus</span>
+            <label class="ios-switch small"><input type="checkbox" id="killGpuEffects"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-pauseVideos">
+            <div class="row-copy">
+              <span class="row-title">Bloquer l'autoplay vidéo</span>
+              <span class="row-sub">Lecture manuelle toujours autorisée</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="pauseVideos"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-noPopups">
+            <div class="row-copy">
+              <span class="row-title">Anti-bannières cookies</span>
+              <span class="row-sub">Masquage ciblé CMP sans faux positifs</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="noPopups"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-lazyLoadAll">
+            <div class="row-copy">
+              <span class="row-title">Lazy-load forcé</span>
+              <span class="row-sub">Charge images &amp; cadres à l'approche</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="lazyLoadAll"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-noWillChange">
+            <div class="row-copy">
+              <span class="row-title">Nettoyer will-change</span>
+              <span class="row-sub">Libère les couches mémoire GPU</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="noWillChange"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-contentVisibility">
+            <div class="row-copy">
+              <span class="row-title">Rendu hors-écran différé</span>
+              <span class="row-sub">content-visibility sur les pages longues</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="contentVisibility"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+        </div>
+
+        <div class="section-caption">Réseau &amp; Médias</div>
+        <div class="glass-group">
+          <div class="setting-row" id="item-blockGifs">
+            <div class="row-copy">
+              <span class="row-title">Bloquer les GIFs</span>
+              <span class="row-sub">Blocage réseau natif avant téléchargement</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="blockGifs"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-blockWebFonts">
+            <div class="row-copy">
+              <span class="row-title">Bloquer les WebFonts</span>
+              <span class="row-sub">Évite les téléchargements de polices</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="blockWebFonts"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-blockImages">
+            <div class="row-copy">
+              <span class="row-title">Bloquer les images</span>
+              <span class="row-sub">0 octet image transféré, texte préservé</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="blockImages"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-blockHeavyMedia">
+            <div class="row-copy">
+              <span class="row-title">Bloquer flux médias</span>
+              <span class="row-sub">Stoppe les préchargements audio/vidéo</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="blockHeavyMedia"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-blockIframes">
+            <div class="row-copy">
+              <span class="row-title">Masquer les iframes</span>
+              <span class="row-sub">Cache les widgets embarqués tiers</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="blockIframes"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-grayscaleMedia">
+            <div class="row-copy">
+              <span class="row-title">Médias Noir &amp; Blanc</span>
+              <span class="row-sub">Filtre monochrome sobre</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="grayscaleMedia"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+        </div>
+
+        <div class="section-caption">Apparence</div>
+        <div class="glass-group">
+          <div class="setting-row" id="item-darkMode">
+            <div class="row-copy">
+              <span class="row-title">Mode sombre</span>
+              <span class="row-sub">Surfaces sombres opaques et lisibles</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="darkMode"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-systemFonts">
+            <div class="row-copy">
+              <span class="row-title">Polices système</span>
+              <span class="row-sub">Typographie native instantanée</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="systemFonts"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-removeUIEffects">
+            <div class="row-copy">
+              <span class="row-title">Design plat</span>
+              <span class="row-sub">Retire ombres et arrondis</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="removeUIEffects"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-noSticky">
+            <div class="row-copy">
+              <span class="row-title">Libérer barres sticky</span>
+              <span class="row-sub">Détache les en-têtes figés</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="noSticky"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+
+          <div class="setting-row" id="item-readerMode">
+            <div class="row-copy">
+              <span class="row-title">Mode lecture</span>
+              <span class="row-sub">Vue article centrée réversible</span>
+            </div>
+            <label class="ios-switch small"><input type="checkbox" id="readerMode"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+          </div>
+        </div>
+
+        <div class="section-caption">Avancé</div>
+        <div class="glass-group">
+          <details class="drawer-item">
+            <summary>Liste blanche de sites</summary>
+            <div class="drawer-body">
+              <div class="drawer-toggle-row" id="item-whitelist">
+                <span class="row-sub">Activer les exclusions</span>
+                <label class="ios-switch small"><input type="checkbox" id="whitelist"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+              </div>
+              <textarea id="whitelistDomains" class="glass-input" rows="3" placeholder="perplexity.ai&#10;figma.com"></textarea>
+            </div>
+          </details>
+
+          <details class="drawer-item">
+            <summary>CSS personnalisé</summary>
+            <div class="drawer-body">
+              <div class="drawer-toggle-row" id="item-customCSS">
+                <span class="row-sub">Injecter sur tous les sites actifs</span>
+                <label class="ios-switch small"><input type="checkbox" id="customCSS"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+              </div>
+              <textarea id="customCSSCode" class="glass-input mono" rows="3" placeholder="/* Votre CSS */"></textarea>
+            </div>
+          </details>
+
+          <details class="drawer-item">
+            <summary>Raccourcis &amp; Sauvegarde</summary>
+            <div class="drawer-body">
+              <div class="shortcut-line"><span>Basculer Potato Mode</span><kbd>Alt+Shift+P</kbd></div>
+              <div class="shortcut-line"><span>Exclure ce site</span><kbd>Alt+Shift+W</kbd></div>
+              <div class="drawer-actions">
+                <button type="button" class="ghost-pill" id="exportBtn">Exporter</button>
+                <button type="button" class="ghost-pill" id="importBtn">Importer</button>
+                <button type="button" class="ghost-pill danger" id="resetBtn">Réinitialiser</button>
+                <input type="file" id="importFile" accept="application/json" hidden>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- VIEW 3: RAM -->
+      <section class="view scrollable" id="view-ram" role="tabpanel" hidden>
+        <div class="glass-card ram-hero">
+          <div class="ram-counters">
+            <div class="ram-metric">
+              <span class="ram-big" id="ramLoadedCount">—</span>
+              <span class="ram-cap">En RAM</span>
+            </div>
+            <div class="ram-sep"></div>
+            <div class="ram-metric">
+              <span class="ram-big" id="ramSleepingCount">—</span>
+              <span class="ram-cap">En veille</span>
+            </div>
+            <div class="ram-sep"></div>
+            <div class="ram-metric">
+              <span class="ram-big" id="ramTotalSaved">0</span>
+              <span class="ram-cap">Total</span>
             </div>
           </div>
 
-          <button type="button" class="action-glass-btn" id="discardNowBtn">
+          <button type="button" class="scan-pill-btn subtle-btn" id="discardNowBtn">
             Libérer la RAM maintenant
           </button>
           <p class="ram-feedback" id="ramFeedback" hidden></p>
         </div>
 
-        <div class="group-label">Bridage automatique de la RAM</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-ramLimiterEnabled">
+        <div class="section-caption">Bridage automatique</div>
+        <div class="glass-group">
+          <div class="setting-row" id="item-ramLimiterEnabled">
             <div class="row-copy">
               <span class="row-title">Limiteur RAM actif</span>
-              <span class="row-desc">Met en veille les onglets inactifs via tabs.discard</span>
+              <span class="row-sub">Suspend les onglets inactifs en mémoire</span>
             </div>
-            <label class="ios-switch"><input type="checkbox" id="ramLimiterEnabled"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+            <label class="ios-switch small"><input type="checkbox" id="ramLimiterEnabled"><span class="ios-track"><span class="ios-thumb"></span></span></label>
           </div>
 
-          <div class="row-item row-select">
-            <div class="row-copy">
-              <span class="row-title">Veille après inactivité</span>
-              <span class="row-desc">Délai avant déchargement mémoire</span>
-            </div>
+          <div class="setting-row">
+            <span class="row-title">Veille après inactivité</span>
             <select id="ramIdleMinutes" class="glass-select">
               <option value="3">3 min</option>
               <option value="10">10 min</option>
@@ -313,11 +350,8 @@
             </select>
           </div>
 
-          <div class="row-item row-select">
-            <div class="row-copy">
-              <span class="row-title">Plafond d'onglets actifs</span>
-              <span class="row-desc">Maximum d'onglets gardés en RAM</span>
-            </div>
+          <div class="setting-row">
+            <span class="row-title">Plafond d'onglets</span>
             <select id="ramMaxActiveTabs" class="glass-select">
               <option value="4">Max 4</option>
               <option value="8">Max 8</option>
@@ -327,75 +361,26 @@
             </select>
           </div>
 
-          <div class="row-item" id="item-ramProtectForms">
+          <div class="setting-row" id="item-ramProtectForms">
             <div class="row-copy">
               <span class="row-title">Protéger les formulaires</span>
-              <span class="row-desc">Ne suspend pas un onglet en cours de saisie</span>
+              <span class="row-sub">Ignore les onglets en cours de saisie</span>
             </div>
-            <label class="ios-switch"><input type="checkbox" id="ramProtectForms"><span class="ios-track"><span class="ios-thumb"></span></span></label>
+            <label class="ios-switch small"><input type="checkbox" id="ramProtectForms"><span class="ios-track"><span class="ios-thumb"></span></span></label>
           </div>
         </div>
 
-        <div class="group-label">Onglets en arrière-plan</div>
-        <div class="glass-list tab-list" id="backgroundTabsList">
-          <div class="empty-hint">Aucun autre onglet ouvert</div>
-        </div>
-      </section>
-
-      <!-- TAB 3: ADVANCED -->
-      <section class="tab-panel" id="panel-advanced" role="tabpanel" hidden>
-        <div class="group-label">Liste blanche (Sites exclus)</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-whitelist">
-            <div class="row-copy">
-              <span class="row-title">Activer la liste blanche</span>
-              <span class="row-desc">Désactive CSS, JS et DNR sur ces domaines</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="whitelist"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-          <div class="editor-box">
-            <textarea id="whitelistDomains" class="glass-textarea" rows="3" placeholder="perplexity.ai&#10;figma.com&#10;youtube.com"></textarea>
-          </div>
-        </div>
-
-        <div class="group-label">CSS personnalisé</div>
-        <div class="glass-list">
-          <div class="row-item" id="item-customCSS">
-            <div class="row-copy">
-              <span class="row-title">Injecter du CSS perso</span>
-              <span class="row-desc">Appliqué sur tous les sites actifs</span>
-            </div>
-            <label class="ios-switch"><input type="checkbox" id="customCSS"><span class="ios-track"><span class="ios-thumb"></span></span></label>
-          </div>
-          <div class="editor-box" id="customCSSBox" hidden>
-            <textarea id="customCSSCode" class="glass-textarea mono" rows="4" placeholder="/* Votre CSS personnalisé */"></textarea>
-          </div>
-        </div>
-
-        <div class="group-label">Raccourcis &amp; Sauvegarde</div>
-        <div class="glass-card shortcuts-card">
-          <div class="shortcut-row">
-            <span>Basculer Potato Mode</span>
-            <kbd>Alt + Shift + P</kbd>
-          </div>
-          <div class="shortcut-row">
-            <span>Exclure / Réactiver ce site</span>
-            <kbd>Alt + Shift + W</kbd>
-          </div>
-          <div class="utility-actions">
-            <button type="button" class="pill-btn subtle" id="exportBtn">Exporter</button>
-            <button type="button" class="pill-btn subtle" id="importBtn">Importer</button>
-            <button type="button" class="pill-btn subtle danger" id="resetBtn">Réinitialiser</button>
-            <input type="file" id="importFile" accept="application/json" hidden>
-          </div>
+        <div class="section-caption">Onglets en arrière-plan</div>
+        <div class="glass-group" id="backgroundTabsList">
+          <div class="empty-hint">Aucun autre onglet web ouvert</div>
         </div>
       </section>
 
     </main>
 
     <!-- ULTRA-DISCREET FOOTER -->
-    <footer class="discreet-footer">
-      <span class="footer-ver">v3.0</span>
+    <footer class="footer">
+      <span>v3.1</span>
       <a href="https://github.com/djael-ml/potato-mode" target="_blank" rel="noopener noreferrer" class="github-link">djael-ml</a>
     </footer>
   </div>

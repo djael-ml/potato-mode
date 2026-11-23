@@ -1,12 +1,13 @@
-# Potato Mode v3.0
+# Potato Mode v3.1
 
-Une extension cross-browser (**Chrome / Brave / Edge** et **Firefox** MV3 à 100 % de parité) conçue pour **adapter automatiquement les performances web à votre PC**, **brider réellement la RAM utilisée** par les onglets inactifs et **bloquer les ressources lourdes avant même leur téléchargement**.
+Une extension cross-browser (**Chrome / Brave / Edge** et **Firefox** MV3 à 100 % de parité) conçue pour **s'adapter automatiquement en temps réel à la charge de votre PC**, **brider réellement la RAM utilisée** par les onglets inactifs et **bloquer les ressources lourdes avant même leur téléchargement**.
 
 ---
 
 ## Fonctionnalités clés
 
-- **Scan matériel adaptatif (« Scanner & Adapter mon PC »)** : analyse en temps réel le CPU, la RAM libre/totale, un micro-benchmark de réactivité, les onglets chargés, la batterie et le réseau, puis applique automatiquement le profil optimal (*Léger*, *Équilibré*, *Éco* ou *Patate Max*) — ni trop, ni trop peu.
+- **Mode Adaptatif Automatique (Temps réel)** : change automatiquement de profil (*Léger ↔ Équilibré ↔ Éco ↔ Patate Max*) selon l'évolution réelle de votre PC (RAM libre, charge CPU, nombre d'onglets chargés, batterie, réseau), avec anti-oscillation (cooldown 2 min) et bascule immédiate en cas de RAM critique (< 12 %).
+- **Scan matériel à la demande (« Scanner mon PC »)** : micro-benchmark CPU + diagnostic matériel complet avec rapport transparent.
 - **Limiteur de RAM réel (`tabs.discard` + `alarms`)** : met automatiquement en veille les onglets inactifs selon un délai et un plafond d'onglets chargés en RAM, tout en protégeant les onglets actifs, épinglés, audio, whitelistés et les formulaires en cours de saisie + bouton *« Libérer la RAM maintenant »*.
 - **Score dynamique 100 % réel** : calculé exclusivement à partir de mesures effectives (FPS réel, Long Tasks > 50 ms, nœuds DOM, ressources, RAM libre / onglets chargés). Zéro donnée factice.
 - **Blocage réseau natif MV3 (`declarativeNetRequest`)** : bloque WebFonts, GIFs, images ou flux médias **avant téléchargement** (0 octet transféré), synchronisé avec votre liste blanche.
@@ -54,17 +55,17 @@ Toutes les versions **Chrome** et **Firefox** (archives `.zip` pour décompressi
 
 | Navigateur | Archive ZIP (Unpacked / Store) | Package (Packed) |
 | :--- | :--- | :--- |
-| **Chrome / Brave / Edge** | `potato-mode-chrome-v3.0.0.zip` | `potato-mode-chrome-v3.0.0.crx` |
-| **Firefox** | `potato-mode-firefox-v3.0.0.zip` | `potato-mode-firefox-v3.0.0.xpi` |
+| **Chrome / Brave / Edge** | `potato-mode-chrome-v3.1.0.zip` | `potato-mode-chrome-v3.1.0.crx` |
+| **Firefox** | `potato-mode-firefox-v3.1.0.zip` | `potato-mode-firefox-v3.1.0.xpi` |
 
 ### Installation rapide
 
 #### Chrome / Brave / Edge
-1. Téléchargez `potato-mode-chrome-v3.0.0.zip` depuis les [Releases](https://github.com/djael-ml/potato-mode/releases) et décompressez-le *(ou lancez `node scripts/release.mjs` en local pour générer `releases/unpacked/chrome/`)*.
+1. Téléchargez `potato-mode-chrome-v3.1.0.zip` depuis les [Releases](https://github.com/djael-ml/potato-mode/releases) et décompressez-le *(ou lancez `node scripts/release.mjs` en local pour générer `releases/unpacked/chrome/`)*.
 2. Ouvrez `chrome://extensions`, activez le **Mode développeur**, puis cliquez sur **Charger l'extension non empaquetée**.
 
 #### Firefox
-1. Téléchargez `potato-mode-firefox-v3.0.0.zip` (ou `.xpi`) depuis les [Releases](https://github.com/djael-ml/potato-mode/releases).
+1. Téléchargez `potato-mode-firefox-v3.1.0.zip` (ou `.xpi`) depuis les [Releases](https://github.com/djael-ml/potato-mode/releases).
 2. Ouvrez `about:debugging#/runtime/this-firefox` → **Charger un module complémentaire temporaire…** → sélectionnez `manifest.json` (ou installez directement le `.xpi` sur Firefox Developer Edition / Nightly).
 
 ---

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Potato Mode",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Optimisation web adaptative : scan matériel auto, limiteur de RAM par onglets, blocage réseau MV3, score temps réel et mode ultra-léger.",
   "author": "djael-ml",
   "permissions": [

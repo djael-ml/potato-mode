@@ -236,8 +236,68 @@
     };
   }
 
+  const PROFILE_ORDER = ['light', 'balanced', 'eco', 'extreme'];
+  const AUTO_SWITCH_COOLDOWN_MS = 2 * 60 * 1000; // 2 min anti-flapping cooldown
+
+  /**
+   * Decides whether the automatic adaptive mode should switch profiles based on
+   * live telemetry, applying hysteresis/cooldown to prevent rapid oscillation.
+   */
+  function decideAdaptiveTransition(currentProfileId, scanReport, lastSwitchAt = 0, nowMs = Date.now()) {
+    if (!scanReport || !scanReport.profileId) {
+      return { shouldSwitch: false, reason: 'no-report' };
+    }
+
+    const targetId = scanReport.profileId;
+    if (targetId === currentProfileId) {
+      return { shouldSwitch: false, reason: 'already-optimal' };
+    }
+
+    const specs = scanReport.detectedSpecs || {};
+    const isCriticalEmergency =
+      (typeof specs.ramFreePercent === 'number' && specs.ramFreePercent < 12) ||
+      (typeof specs.cpuLoadPercent === 'number' && specs.cpuLoadPercent >= 90);
+
+    const elapsed = nowMs - (Number(lastSwitchAt) || 0);
+    if (!isCriticalEmergency && lastSwitchAt > 0 && elapsed < AUTO_SWITCH_COOLDOWN_MS) {
+      return { shouldSwitch: false, reason: 'cooldown' };
+    }
+
+    const currIdx = PROFILE_ORDER.indexOf(currentProfileId);
+    const nextIdx = PROFILE_ORDER.indexOf(targetId);
+
+    // Build a concise factual reason for the UI
+    let summaryReason = scanReport.reasons && scanReport.reasons[0]
+      ? scanReport.reasons[0]
+      : `Adaptation vers ${scanReport.profileLabel}`;
+
+    if (typeof specs.ramFreePercent === 'number' && specs.ramFreePercent < 15) {
+      summaryReason = `RAM libre ${specs.ramFreePercent}%`;
+    } else if (typeof specs.cpuLoadPercent === 'number' && specs.cpuLoadPercent >= 80) {
+      summaryReason = `CPU à ${specs.cpuLoadPercent}%`;
+    } else if (typeof specs.loadedTabsCount === 'number' && specs.loadedTabsCount >= 18) {
+      summaryReason = `${specs.loadedTabsCount} onglets en RAM`;
+    } else if (specs.onBattery === true && typeof specs.batteryLevel === 'number' && specs.batteryLevel <= 25) {
+      summaryReason = `Batterie ${specs.batteryLevel}%`;
+    } else if (currIdx >= 0 && nextIdx >= 0 && nextIdx < currIdx) {
+      summaryReason = 'Charge redevenue faible';
+    }
+
+    return {
+      shouldSwitch: true,
+      fromProfileId: currentProfileId,
+      nextProfileId: targetId,
+      nextProfileLabel: scanReport.profileLabel,
+      reason: summaryReason,
+      recommendedSettings: scanReport.recommendedSettings,
+      timestamp: nowMs
+    };
+  }
+
   const exported = {
-    evaluateScan
+    evaluateScan,
+    decideAdaptiveTransition,
+    AUTO_SWITCH_COOLDOWN_MS
   };
 
   root.PotatoMode = root.PotatoMode || {};

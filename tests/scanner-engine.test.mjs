@@ -106,4 +106,46 @@ describe('Adaptive PC Scanner Engine', () => {
     assert.equal(report.detectedSpecs.cpuLoadPercent, null);
     assert.equal(report.detectedSpecs.benchmarkMs, 38);
   });
+
+  it('auto-switches mode cleanly when load changes and enforces cooldown anti-flapping', () => {
+    const now = 1_700_000_000_000;
+    const ecoReport = scanner.evaluateScan({
+      cpuCores: 4,
+      ramTotalGB: 8,
+      ramFreePercent: 26,
+      benchmarkMs: 36,
+      loadedTabsCount: 22,
+      onBattery: true,
+      batteryLevel: 0.2
+    });
+
+    // Already on same profile -> no switch
+    const same = scanner.decideAdaptiveTransition('eco', ecoReport, 0, now);
+    assert.equal(same.shouldSwitch, false);
+
+    // Within cooldown (30s ago) and non-critical -> blocked to avoid flapping
+    const blocked = scanner.decideAdaptiveTransition('balanced', ecoReport, now - 30_000, now);
+    assert.equal(blocked.shouldSwitch, false);
+    assert.equal(blocked.reason, 'cooldown');
+
+    // Past cooldown -> switches cleanly from balanced to eco
+    const allowed = scanner.decideAdaptiveTransition('balanced', ecoReport, now - 180_000, now);
+    assert.equal(allowed.shouldSwitch, true);
+    assert.equal(allowed.nextProfileId, 'eco');
+  });
+
+  it('bypasses cooldown immediately during critical RAM emergency (<12% free)', () => {
+    const now = 1_700_000_000_000;
+    const critReport = scanner.evaluateScan({
+      cpuCores: 2,
+      ramTotalGB: 4,
+      ramFreePercent: 9,
+      cpuLoadPercent: 85,
+      loadedTabsCount: 18
+    });
+
+    const emergency = scanner.decideAdaptiveTransition('balanced', critReport, now - 15_000, now);
+    assert.equal(emergency.shouldSwitch, true);
+    assert.equal(emergency.nextProfileId, 'extreme');
+  });
 });
